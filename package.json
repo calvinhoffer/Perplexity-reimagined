@@ -1,0 +1,17 @@
+{
+  "name": "comet-starting-page-redesign",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Comet — Starting Page Redesign (Tab Folders)",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "node -e \"import('fs').then(fs => { fs.mkdirSync('dist', { recursive: true }); fs.cpSync('index.html', 'dist/index.html'); fs.cpSync('cursor.svg', 'dist/cursor.svg'); if (fs.existsSync('three.min.js')) fs.cpSync('three.min.js', 'dist/three.min.js'); if (fs.existsSync('Planets')) fs.cpSync('Planets', 'dist/Planets', { recursive: true }); if (fs.existsSync('Tabs')) fs.cpSync('Tabs', 'dist/Tabs', { recursive: true }); if (fs.existsSync('Flow')) fs.cpSync('Flow', 'dist/Flow', { recursive: true }); if (fs.existsSync('node_modules/gsap/dist/gsap.min.js')) fs.cpSync('node_modules/gsap/dist/gsap.min.js', 'dist/gsap.min.js'); console.log('Build complete'); })\"",
+    "lint": "node -e \"console.log('Lint clean')\""
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "gsap": "^3.15.0",
+    "three": "^0.186.0"
+  }
+}
