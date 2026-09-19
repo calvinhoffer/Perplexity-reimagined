@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Comet — Starting Page Redesign (Tab Folders)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* --- OG Comet tokens (pasted) --- */
+    --terra-450:52.75% .13 37.37;
+    --jenova-250:84.44% .092 .32;
+    --jenova-450:49.39% .109 9.38;
+    --rosa-350:68.18% .207 22.93;
+    --rosa-450:51.72% .199 21.85;
+    --costa-300:80.62% .151 67.71;
+    --costa-400:65.87% .163 54.96;
+    --dalmasca-300:83.9% .132 96.6;
+    --dalmasca-400:69.87% .123 97.59;
+    --gridania-350:75.63% .107 109.92;
+    --gridania-450:60.17% .065 108.2;
+    --limsa-350:73.11% .113 232.51;
+    --limsa-450:53.86% .101 231.01;
+    --kuja-350:72.5% .119 316.63;
+    --kuja-450:54.3% .097 316.69;
+    --warm-garuda-300:69.92% .166 144.58;
+    --warm-astra-300:95.63% .006 75.41;
+    --warm-umbra-300:25.68% .002 67.72;
+    --warm-umbra-1000:87.35% .002 67.8;
+    --header-height:56px;
+    --thread-width:1100px;
+    --thread-content-width:720px;
+    --sidebar-default-width:56px;
+    --sidebar-width-collapsed:90px;
+    --sidebar-pinned-width:200px;
+    --size-sm:8px; --size-md:16px; --size-ml:24px; --size-lg:32px; --size-xl:48px;
+    --font-weight-sans-regular:350; --font-weight-sans-medium:440; --font-weight-sans-semibold:530;
+
+    /* --- mapped to our UI (warm dark, OG geometry) --- */
+    --bg:#171615;
+    --bg-soft:#1e1d1b;
+    --sidebar-bg:#1E1D1B;
+    --panel:#232120;
+    --panel-border:rgba(255,255,255,.07);
+    --text:oklch(var(--warm-astra-300) / 1);
+    --text:#ece9e4;
+    --text-dim:#a3a099;
+    --text-faint:#6f6d67;
+    --pill:#262422;
+    --accent:#fff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    font-weight:var(--font-weight-sans-regular);
+    font-variation-settings:'opsz' 14;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    cursor:none;
+  }
+  body a, body button, body input, body .chip, body .planet, body .tab-dot{cursor:none}
+  .app{display:flex;height:100vh;width:100vw}
+  /* Sidebar — OG: 56px default */
+  .rail{
+    width:var(--sidebar-default-width);min-width:var(--sidebar-default-width);
+    border-right:1px solid rgba(255,255,255,.06);
+    background:var(--sidebar-bg);display:flex;flex-direction:column;align-items:center;
+    padding:10px 0 12px;gap:var(--size-sm);
+  }
+  .rail .logo{font-size:20px;line-height:1;opacity:.9;height:36px;display:grid;place-items:center}
+  .rail-btn{
+    width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+    color:#b9b7b4;border:1px solid transparent;background:transparent;cursor:none;
+    font-size:17px;
+  }
+  .rail-btn:hover{background:#2a2826}
+  .rail-btn.solid{background:#2f2d2b;color:#fff}
+  .rail .spacer{flex:1}
+  .avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#4da6ff,#0a3d2e 60%,#7ac74f);border:1px solid rgba(255,255,255,.2)}
+  .topbar{
+    position:absolute;top:0;left:var(--sidebar-default-width);right:0;height:var(--header-height);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 var(--size-md);pointer-events:none;
+  }
+  .topbar>*{pointer-events:auto}
+  .plan-pill{
+    background:var(--pill);border:1px solid rgba(255,255,255,.06);
+    border-radius:999px;padding:var(--size-sm) 14px;font-size:14px;color:#d6d4d1;
+    font-weight:var(--font-weight-sans-regular);
+  }
+  .plan-pill b{font-weight:var(--font-weight-sans-medium);color:#fff}
+  .win-controls{display:flex;gap:var(--size-sm)}
+  .win-btn{width:40px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#d6d4d1;display:grid;place-items:center;cursor:none}
+  /* Main — OG thread geometry */
+  .main{flex:1;position:relative;display:flex;flex-direction:column;align-items:center}
+  .search-wrap{margin-top:18vh;width:min(var(--thread-content-width),62vw);max-width:var(--thread-width);z-index:5}
+  .eyebrow{font-size:13px;color:var(--text-dim);margin-bottom:var(--size-sm);font-weight:var(--font-weight-sans-regular)}
+  h1{font-size:27px;font-weight:var(--font-weight-sans-regular);letter-spacing:-.015em;margin-bottom:var(--size-ml)}
+  .box{
+    background:var(--panel);border:1px solid var(--panel-border);
+    border-radius:var(--size-md);padding:18px 18px 14px;
+    min-height:110px;
+    box-shadow:none;
+  }
+  .box input{
+    width:100%;background:transparent;border:0;outline:0;color:var(--text);
+    font-size:16px;font-family:inherit;font-weight:var(--font-weight-sans-regular);
+  }
+  .box input::placeholder{color:var(--text-faint)}
+  .box-row{display:flex;align-items:center;gap:10px;margin-top:var(--size-md)}
+  .icon-btn{width:32px;height:32px;border-radius:var(--size-sm);display:grid;place-items:center;background:transparent;border:0;color:#a9a7a4;font-size:20px;cursor:none}
+  .chip{display:flex;align-items:center;gap:6px;background:#2c2a28;border:1px solid rgba(255,255,255,.07);border-radius:999px;padding:7px 12px;font-size:13.5px;color:#e8e6e3;font-weight:var(--font-weight-sans-medium)}
+  .chip.dim{background:transparent;border-color:transparent;color:#9b9996;font-weight:var(--font-weight-sans-regular)}
+  .chip svg{opacity:.8}
+  .grow{flex:1}
+  .model{font-size:13.5px;color:#a9a7a4;display:flex;align-items:center;gap:4px}
+  .voice{width:64px;display:flex;align-items:center;justify-content:flex-end;gap:8px}
+  .go{width:36px;height:36px;border-radius:50%;background:oklch(var(--warm-astra-300));color:#111;border:0;font-size:16px;display:grid;place-items:center;cursor:none}
+  /* Planets field */
+  .field{position:absolute;inset:0;overflow:hidden}
+  .planet{
+    position:absolute;cursor:none;user-select:none;
+    --s:180px; /* diameter */
+    width:var(--s);text-align:center;
+    transition:transform .35s cubic-bezier(.2,.7,.2,1);
+  }
+  .planet .orb{position:relative;z-index:1;width:var(--s);height:var(--s);margin:0 auto}
+  .planet img{
+    width:100%;height:100%;object-fit:contain;border-radius:50%;
+    display:block;filter:saturate(1.05);
+    transition:transform .35s cubic-bezier(.2,.7,.2,1), filter .3s;
+  }
+  .planet.peeking img, .planet:hover img{transform:scale(1.05)}
+  .planet.open img{transform:scale(1.03)}
+  /* Curved label via SVG — hugs the sphere, hoverable */
+  .label-svg{position:absolute;left:50%;bottom:100%;top:auto;transform:translateX(-50%);overflow:visible;pointer-events:auto;cursor:none;z-index:3;width:calc(var(--s)*1.8);height:calc(var(--s)*.5);margin-bottom:-26px}
+  .planet[data-size="lg"] .label-svg{margin-bottom:-48px}
+  .planet[data-size="md"] .label-svg{margin-bottom:-30px}
+  .planet[data-size="sm"] .label-svg{margin-bottom:-16px}
+  .label-svg text{
+    font-family:'Inter',sans-serif;font-weight:var(--font-weight-sans-regular);
+    fill:var(--text-faint);font-size:22px;letter-spacing:.01em;
+    transition:fill .25s, font-size .25s;
+  }
+  .planet[data-size="lg"] .label-svg text{font-size:56px}
+  .planet[data-size="md"] .label-svg text{font-size:34px}
+  .planet[data-size="sm"] .label-svg text{font-size:18px}
+  .planet.peeking .label-svg text, .planet:hover .label-svg text, .planet.open .label-svg text{fill:oklch(var(--warm-astra-300));font-weight:var(--font-weight-sans-medium)}
+  .planet[data-size="lg"].peeking .label-svg text, .planet[data-size="lg"]:hover .label-svg text{font-size:64px}
+  .planet[data-size="md"].peeking .label-svg text, .planet[data-size="md"]:hover .label-svg text{font-size:40px}
+  .planet[data-size="sm"].peeking .label-svg text, .planet[data-size="sm"]:hover .label-svg text{font-size:22px}
+  /* Orbit tabs — perfect circle around the sphere center */
+  .orbit{
+    position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:2;
+    width:var(--s);height:var(--s);
+    pointer-events:none;opacity:0;transition:opacity .3s;
+  }
+  .planet.open .orbit{opacity:1;pointer-events:auto}
+  .planet.open .label-svg{opacity:0;pointer-events:none}
+  .tab-dot{
+    position:absolute;width:40px;height:40px;border-radius:50%;
+    background:none;border:none;
+    display:grid;place-items:center;overflow:hidden;
+    cursor:none;box-shadow:none;
+    opacity:.7;
+    transition:transform .2s, opacity .2s;
+  }
+  .tab-dot:hover{transform:scale(1.18);z-index:10;opacity:1}
+  .tab-dot img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+  .tab-name{
+    position:absolute;font-size:20px;color:#8f8d8a;
+    font-weight:var(--font-weight-sans-regular);
+    opacity:0;transition:opacity .2s;white-space:nowrap;
+    pointer-events:none;z-index:20;transform-origin:left center;
+  }
+  .orbit.show-name .tab-name{opacity:1}
+  /* Custom cursor from cursor.svg */
+  #customCursor{
+    position:fixed;left:0;top:0;width:38px;height:38px;z-index:999;
+    background:url('./cursor.svg') no-repeat center/contain;
+    pointer-events:none;opacity:0;transition:opacity .15s;
+    filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));
+  }
+  #customCursor.on{opacity:1}
+  @media (hover:none), (prefers-reduced-motion:reduce){
+    #customCursor{display:none}
+    body, body a, body button, body input, body .chip, body .planet, body .tab-dot{cursor:auto}
+    .planet,.tab-dot{cursor:pointer}
+  }
+  /* Positions from Default homepage.jpg */
+  #p-ai{left:5.5%;bottom:10%;--s:172px}
+  #p-ent{left:21%;bottom:11.5%;--s:84px}
+  #p-soc{left:52.5%;bottom:19%;--s:228px}
+  #p-mus{left:68.5%;bottom:7.5%;--s:118px}
+  #p-des{left:79.5%;bottom:13%;--s:304px}
+  .customize{
+    position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
+    background:transparent;border:1px solid rgba(255,255,255,.12);
+    color:#d6d4d1;border-radius:999px;padding:8px 16px;font-size:14px;
+    display:flex;gap:8px;align-items:center;cursor:none;z-index:10;
+  }
+  .hint{
+    position:absolute;bottom:60px;left:50%;transform:translateX(-50%);
+    font-size:12px;color:#6f6e6c;white-space:nowrap;z-index:10;
+  }
+  @media (max-width:900px){
+    .search-wrap{width:86vw;margin-top:14vh}
+    #p-soc{left:38%} #p-des{left:60%;--s:220px} #p-ai{--s:130px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  :focus-visible{outline:2px solid #fff;outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="rail" aria-label="Sidebar (placeholder icons)">
+    <div class="logo" title="Comet logo — PLACEHOLDER, fetch official SVG">⁂</div>
+    <button class="rail-btn solid" title="+">+</button>
+    <button class="rail-btn" title="Discover">▤</button>
+    <button class="rail-btn" title="Spaces">◫</button>
+    <button class="rail-btn" title="Prism">⬡</button>
+    <button class="rail-btn" title="Library">❏</button>
+    <button class="rail-btn" title="History">◷</button>
+    <div class="spacer"></div>
+    <button class="rail-btn" title="Upgrade">↑</button>
+    <button class="rail-btn" title="Notifications">♪</button>
+    <div class="avatar" title="Avatar — PLACEHOLDER"></div>
+  </nav>
+
+  <div class="topbar">
+    <div class="plan-pill"><b style="font-weight:400">Free plan</b> · Upgrade</div>
+    <div class="win-controls"><button class="win-btn">⊞</button><button class="win-btn">☰</button></div>
+  </div>
+
+  <main class="main">
+    <div class="search-wrap">
+      <div class="eyebrow">Search</div>
+      <h1>What do you want to know?</h1>
+      <div class="box">
+        <input placeholder="Type / for search modes" aria-label="Search" />
+        <div class="box-row">
+          <button class="icon-btn">+</button>
+          <span class="chip">⌕ Search ⌄</span>
+          <span class="chip dim">🖵 Computer</span>
+          <span class="grow"></span>
+          <span class="model">Model ⌄</span>
+          <span class="voice"><span style="opacity:.6">🎙</span><button class="go">◫</button></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field" id="field">
+      <!-- AI -->
+      <div class="planet" id="p-ai" data-size="md" data-name="AI" tabindex="0">
+        <svg class="label-svg" viewBox="0 0 300 70"><path id="arc-ai" d="M20,62 Q150,2 280,58" fill="none"/><text><textPath href="#arc-ai" startOffset="50%" text-anchor="middle">AI</textPath></text></svg>
+        <div class="orbit"></div>
+        <div class="orb"><img src="./Planets/planet-avatars.png" alt="AI tab folder" /></div>
+      </div>
+      <!-- Entertainment -->
+      <div class="planet" id="p-ent" data-size="sm" data-name="Entertainment" tabindex="0">
+        <svg class="label-svg" viewBox="0 0 300 70"><path id="arc-ent" d="M20,62 Q150,2 280,58" fill="none"/><text><textPath href="#arc-ent" startOffset="50%" text-anchor="middle">Entertainment</textPath></text></svg>
+        <div class="orbit"></div>
+        <div class="orb"><img src="./Planets/planet-with-hover-1.png" alt="Entertainment" /></div>
+      </div>
+      <!-- Social media -->
+      <div class="planet" id="p-soc" data-size="md" data-name="Social media" tabindex="0">
+        <svg class="label-svg" viewBox="0 0 340 80"><path id="arc-soc" d="M10,68 Q170,2 330,62" fill="none"/><text><textPath href="#arc-soc" startOffset="50%" text-anchor="middle">Social media</textPath></text></svg>
+        <div class="orbit"></div>
+        <div class="orb"><img src="./Planets/planet-with-hover-6.png" alt="Social media" /></div>
+      </div>
+      <!-- Music -->
+      <div class="planet" id="p-mus" data-size="sm" data-name="Music" tabindex="0">
+        <svg class="label-svg" viewBox="0 0 300 70"><path id="arc-mus" d="M20,62 Q150,2 280,58" fill="none"/><text><textPath href="#arc-mus" startOffset="50%" text-anchor="middle">Music</textPath></text></svg>
+        <div class="orbit"></div>
+        <div class="orb"><img src="./Planets/planet-with-hover-4.png" alt="Music" /></div>
+      </div>
+      <!-- Design (hero, with orbit tabs) -->
+      <div class="planet" id="p-des" data-size="lg" data-name="Design" tabindex="0">
+        <svg class="label-svg" viewBox="0 0 400 90"><path id="arc-des" d="M20,78 Q200,2 380,68" fill="none"/><text><textPath href="#arc-des" startOffset="50%" text-anchor="middle">Design</textPath></text></svg>
+        <div class="orbit" id="orbit-des">
+          <div class="tab-name" id="tabName">Pinterest</div>
+        </div>
+        <div class="orb">
+          <img src="./Planets/planet-with-hover-5.png" alt="Design tab folder" />
+        </div>
+      </div>
+    </div>
+    <div id="customCursor"></div>
+
+    <div class="hint">Hover a planet → label grows + whitens &nbsp;·&nbsp; Press a planet → orbit tabs (70%, 100% on hover) &nbsp;·&nbsp; Leave → back to default</div>
+    <button class="customize">⊞ Customize</button>
+  </main>
+</div>
+
+<script>
+  // Orbit tabs — real logos from ./Tabs, links to respective sites
+  const tabs = [
+    {n:'Behance',   img:'./Tabs/Behance.png',   url:'https://www.behance.net'},
+    {n:'Mobbin',    img:'./Tabs/Mobbin.png',    url:'https://mobbin.com'},
+    {n:'Instagram', img:'./Tabs/Instagram.png', url:'https://www.instagram.com'},
+    {n:'Framer',    img:'./Tabs/Framer.png',    url:'https://www.framer.com'},
+    {n:'Pinterest', img:'./Tabs/Pinterest.png', url:'https://www.pinterest.com'},
+    {n:'Unsplash',  img:'./Tabs/Unsplash.png',  url:'https://unsplash.com'},
+    {n:'Red Dot',   img:'./Tabs/RedDotAward.png', url:'https://www.red-dot.org'},
+    {n:'Awwwards',  img:'./Tabs/Awwwards.png',  url:'https://www.awwwards.org'},
+  ];
+  const orbit = document.getElementById('orbit-des');
+  const tabName = document.getElementById('tabName');
+  // arc positions across top of planet
+  tabs.forEach((t,i)=>{
+    const a = document.createElement('a');
+    a.className='tab-dot'; a.title=t.n; a.dataset.name=t.n;
+    a.href=t.url; a.target='_blank'; a.rel='noopener';
+    a.setAttribute('aria-label', t.n);
+    const im = document.createElement('img');
+    im.src=t.img; im.alt=t.n; im.draggable=false;
+    a.appendChild(im);
+    // true circle around sphere center: constant radius = s/2 + gap
+    const hostPlanet = orbit.closest('.planet');
+    const s = hostPlanet ? hostPlanet.offsetWidth : 304;
+    const GAP = 42, DOT = 40;
+    const R = s / 2 + GAP;
+    const SPREAD = 118; // total arc degrees across the top
+    const angDeg = (-SPREAD / 2 + i * (SPREAD / (tabs.length - 1)));
+    const ang = angDeg * Math.PI / 180;
+    const cx = s / 2 + R * Math.sin(ang);
+    const cy = s / 2 - R * Math.cos(ang);
+    a.style.left = (cx - DOT / 2) + 'px';
+    a.style.top = (cy - DOT / 2) + 'px';
+    a.addEventListener('mouseenter',()=>{
+      // name rides its own radius: centered just outside its tab, tilted along the radial line
+      tabName.textContent = t.n;
+      const ux = Math.sin(ang), uy = -Math.cos(ang);
+      tabName.style.left = (cx + ux * (DOT / 2 + 30)) + 'px';
+      tabName.style.top = (cy + uy * (DOT / 2 + 30)) + 'px';
+      tabName.style.transform = `translate(-50%, -50%) rotate(${angDeg * 0.5 - 60}deg)`;
+      orbit.classList.add('show-name');
+      document.getElementById('customCursor').classList.add('on');
+    });
+    a.addEventListener('mouseleave',()=>{ orbit.classList.remove('show-name'); });
+    a.addEventListener('click',e=>{ e.stopPropagation(); }); // let the link navigate, don't toggle planet
+    orbit.appendChild(a);
+  });
+
+  // Global custom cursor — always visible, not only on hover
+  const customCursor = document.getElementById('customCursor');
+  window.addEventListener('mousemove',e=>{
+    customCursor.style.transform = `translate(${e.clientX - 6}px, ${e.clientY - 4}px)`;
+    customCursor.classList.add('on');
+  });
+  document.documentElement.addEventListener('mouseleave',()=>customCursor.classList.remove('on'));
+  function showCursor(){ customCursor.classList.add('on'); }
+  function hideCursor(){ /* keep global cursor on — no-op */ }
+
+  document.querySelectorAll('.planet').forEach(p=>{
+    const cancelClose = ()=>{ if(p._closeT){ clearTimeout(p._closeT); p._closeT = null; } };
+    p.addEventListener('mouseenter',()=>{ cancelClose(); p.classList.add('peeking'); });
+    p.addEventListener('mousemove',cancelClose);
+    p.addEventListener('mouseleave',(e)=>{
+      // dismiss when cursor truly leaves the planet cluster (planet + label + tabs),
+      // with a grace period so reaching a tab across the gap doesn't collapse it
+      if(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.planet')===p) return;
+      cancelClose();
+      p._closeT = setTimeout(()=>{ p.classList.remove('peeking'); p.classList.remove('open'); }, 700);
+    });
+    // Press toggles orbit — leaving the cluster dismisses back to default (after grace period)
+    p.addEventListener('click',()=>{
+      if(p._closeT){ clearTimeout(p._closeT); p._closeT = null; }
+      const was = p.classList.contains('open');
+      document.querySelectorAll('.planet.open').forEach(o=>{ o.classList.remove('open'); o.classList.remove('peeking'); });
+      if(!was) p.classList.add('open');
+      // keep preview while cursor is still over it
+      p.classList.add('peeking'); showCursor();
+    });
+    p.addEventListener('keydown',e=>{
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();p.click();}
+      if(e.key==='Escape')p.classList.remove('open');
+    });
+  });
+  // Label hover/click acts exactly like planet hover/click
+  document.querySelectorAll('.label-svg').forEach(lbl=>{
+    const p = lbl.closest('.planet');
+    lbl.addEventListener('mouseenter',()=>{ if(p._closeT){ clearTimeout(p._closeT); p._closeT = null; } p.classList.add('peeking'); });
+    lbl.addEventListener('mouseleave',(e)=>{
+      if(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.planet')===p) return;
+      if(p._closeT) clearTimeout(p._closeT);
+      p._closeT = setTimeout(()=>{ p.classList.remove('peeking'); p.classList.remove('open'); }, 700);
+    });
+    lbl.addEventListener('click',e=>{ e.stopPropagation(); p.click(); });
+  });
+  // Click empty field closes
+  document.getElementById('field').addEventListener('click',e=>{
+    if(e.target.id==='field')document.querySelectorAll('.planet.open').forEach(o=>o.classList.remove('open'));
+  });
+  // Auto-open Design once to mirror Click-state for demo? Leave closed; uncomment:
+  // setTimeout(()=>document.getElementById('p-des').classList.add('open'),800);
+</script>
+</body>
+</html>
