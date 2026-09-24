@@ -1,1259 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Comet — Starting Page Redesign (Tab Folders)</title>
-<meta name="description" content="A redesign of the Perplexity / Comet starting page featuring interactive tab folders and planet orbits." />
-<meta property="og:title" content="Comet — Starting Page Redesign (Tab Folders)" />
-<meta property="og:description" content="A redesign of the Perplexity / Comet starting page featuring interactive tab folders and planet orbits." />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script>
-  if (typeof gsap === 'undefined') {
-    document.write('<script src="./gsap.min.js"><\/script>');
-  }
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
-  if (typeof THREE === 'undefined') {
-    document.write('<script src="./three.min.js"><\/script>');
-  }
-</script>
-<style>
-  :root{
-    /* --- OG Comet tokens (pasted) --- */
-    --terra-450:52.75% .13 37.37;
-    --jenova-250:84.44% .092 .32;
-    --jenova-450:49.39% .109 9.38;
-    --rosa-350:68.18% .207 22.93;
-    --rosa-450:51.72% .199 21.85;
-    --costa-300:80.62% .151 67.71;
-    --costa-400:65.87% .163 54.96;
-    --dalmasca-300:83.9% .132 96.6;
-    --dalmasca-400:69.87% .123 97.59;
-    --gridania-350:75.63% .107 109.92;
-    --gridania-450:60.17% .065 108.2;
-    --limsa-350:73.11% .113 232.51;
-    --limsa-450:53.86% .101 231.01;
-    --kuja-350:72.5% .119 316.63;
-    --kuja-450:54.3% .097 316.69;
-    --warm-garuda-300:69.92% .166 144.58;
-    --warm-astra-300:95.63% .006 75.41;
-    --warm-umbra-300:25.68% .002 67.72;
-    --warm-umbra-1000:87.35% .002 67.8;
-    --header-height:56px;
-    --thread-width:1100px;
-    --thread-content-width:720px;
-    --sidebar-default-width:56px;
-    --sidebar-width-collapsed:90px;
-    --sidebar-pinned-width:200px;
-    --size-sm:8px; --size-md:16px; --size-ml:24px; --size-lg:32px; --size-xl:48px;
-    --font-weight-sans-regular:350; --font-weight-sans-medium:440; --font-weight-sans-semibold:530;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comet — Starting Page Redesign (Tab Folders)</title>
+  <meta name="description" content="A redesign of the Perplexity / Comet starting page featuring interactive tab folders and planet orbits." />
+  <meta property="og:title" content="Comet — Starting Page Redesign (Tab Folders)" />
+  <meta property="og:description" content="A redesign of the Perplexity / Comet starting page featuring interactive tab folders and planet orbits." />
 
-    /* --- mapped to our UI (warm dark, OG geometry) --- */
-    --bg:#171615;
-    --bg-soft:#1e1d1b;
-    --sidebar-bg:#1E1D1B;
-    --panel:#232120;
-    --panel-border:rgba(255,255,255,.07);
-    --text:oklch(var(--warm-astra-300) / 1);
-    --text:#ece9e4;
-    --text-dim:#a3a099;
-    --text-faint:#6f6d67;
-    --pill:#262422;
-    --accent:#fff;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
-  body{
-    background:var(--bg);
-    color:var(--text);
-    font-family:'Inter',system-ui,sans-serif;
-    font-weight:var(--font-weight-sans-regular);
-    font-variation-settings:'opsz' 14;
-    overflow:hidden;
-    -webkit-font-smoothing:antialiased;
-    cursor:none;
-  }
-  body a, body button, body input, body .chip, body .planet, body .tab-dot{cursor:none}
-  .app{display:flex;height:100vh;width:100vw}
-  /* Sidebar — OG: 56px default */
-  .rail{
-    width:var(--sidebar-default-width);min-width:var(--sidebar-default-width);
-    border-right:1px solid rgba(255,255,255,.06);
-    background:var(--sidebar-bg);display:flex;flex-direction:column;align-items:center;
-    padding:10px 0 12px;gap:var(--size-sm);
-  }
-  .rail .logo{font-size:20px;line-height:1;opacity:.9;height:36px;display:grid;place-items:center}
-  .rail-btn{
-    width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
-    color:#b9b7b4;border:1px solid transparent;background:transparent;cursor:none;
-    font-size:17px;
-  }
-  .rail-btn:hover{background:#2a2826}
-  .rail-btn.solid{background:#2f2d2b;color:#fff}
-  .rail .spacer{flex:1}
-  .avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#4da6ff,#0a3d2e 60%,#7ac74f);border:1px solid rgba(255,255,255,.2)}
-  .topbar{
-    position:absolute;top:0;left:var(--sidebar-default-width);right:0;height:var(--header-height);
-    display:flex;align-items:center;justify-content:space-between;
-    padding:0 var(--size-md);pointer-events:none;
-  }
-  .topbar>*{pointer-events:auto}
-  .plan-pill{
-    background:var(--pill);border:1px solid rgba(255,255,255,.06);
-    border-radius:999px;padding:var(--size-sm) 14px;font-size:14px;color:#d6d4d1;
-    font-weight:var(--font-weight-sans-regular);
-  }
-  .plan-pill b{font-weight:var(--font-weight-sans-medium);color:#fff}
-  .win-controls{display:flex;gap:var(--size-sm)}
-  .win-btn{width:40px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#d6d4d1;display:grid;place-items:center;cursor:none}
-  /* Main — OG thread geometry */
-  .main{flex:1;position:relative;display:flex;flex-direction:column;align-items:center}
-  .search-wrap{margin-top:18vh;width:min(var(--thread-content-width),62vw);max-width:var(--thread-width);z-index:5}
-  .eyebrow{font-size:13px;color:var(--text-dim);margin-bottom:var(--size-sm);font-weight:var(--font-weight-sans-regular)}
-  h1{font-size:27px;font-weight:var(--font-weight-sans-regular);letter-spacing:-.015em;margin-bottom:var(--size-ml)}
-  .box{
-    background:var(--panel);border:1px solid var(--panel-border);
-    border-radius:var(--size-md);padding:18px 18px 14px;
-    min-height:110px;
-    box-shadow:none;
-  }
-  .box input{
-    width:100%;background:transparent;border:0;outline:0;color:var(--text);
-    font-size:16px;font-family:inherit;font-weight:var(--font-weight-sans-regular);
-  }
-  .box input::placeholder{color:var(--text-faint)}
-  .box-row{display:flex;align-items:center;gap:10px;margin-top:var(--size-md)}
-  .icon-btn{width:32px;height:32px;border-radius:var(--size-sm);display:grid;place-items:center;background:transparent;border:0;color:#a9a7a4;font-size:20px;cursor:none}
-  .chip{display:flex;align-items:center;gap:6px;background:#2c2a28;border:1px solid rgba(255,255,255,.07);border-radius:999px;padding:7px 12px;font-size:13.5px;color:#e8e6e3;font-weight:var(--font-weight-sans-medium)}
-  .chip.dim{background:transparent;border-color:transparent;color:#9b9996;font-weight:var(--font-weight-sans-regular)}
-  .chip svg{opacity:.8}
-  .grow{flex:1}
-  .model{font-size:13.5px;color:#a9a7a4;display:flex;align-items:center;gap:4px}
-  .voice{width:64px;display:flex;align-items:center;justify-content:flex-end;gap:8px}
-  .go{width:36px;height:36px;border-radius:50%;background:oklch(var(--warm-astra-300));color:#111;border:0;font-size:16px;display:grid;place-items:center;cursor:none}
-  /* Planets field */
-  .field{position:absolute;inset:0;overflow:hidden}
-  .planet{
-    position:absolute;cursor:none;user-select:none;
-    --s:180px; /* diameter */
-    width:var(--s);text-align:center;
-  }
-  .planet .orb{position:relative;z-index:1;width:var(--s);height:var(--s);margin:0 auto}
-  .planet img{
-    width:100%;height:100%;object-fit:contain;border-radius:50%;
-    display:block;filter:saturate(1.05);
-    transition:filter .3s;
-    will-change:transform;
-  }
-  /* Curved label via SVG — hugs the sphere, hoverable */
-  .label-svg{
-    position:absolute;left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);overflow:visible;
-    pointer-events:none;cursor:none;z-index:3;
-    transform-origin:center center;
-    will-change:transform, opacity;
-  }
-  #p-des .label-svg{
-    position:absolute;left:50%;bottom:100%;top:auto;transform:translateX(-50%);
-    margin-bottom:-48px;width:calc(var(--s)*1.8);height:calc(var(--s)*.5);
-    transform-origin:center bottom;
-  }
-  #p-soc .label-svg{width:420px;height:420px}
-  #p-ai .label-svg{width:280px;height:280px}
-  #p-mus .label-svg{width:240px;height:240px}
-  #p-ent .label-svg{width:200px;height:200px}
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap" rel="stylesheet">
 
-  .label-svg text{
-    pointer-events:auto;
-    font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-    font-weight:var(--font-weight-sans-medium);
-    fill:var(--text-faint);
-    letter-spacing:.01em;
-    transition:fill .25s, font-size .25s;
-    user-select:none;
-  }
-  /* Font sizes strictly proportional to planet diameters:
-     Design: 304px diameter -> 56px font
-     Social media: 228px diameter -> 42px font
-     AI: 172px diameter -> 32px font
-     Music: 118px diameter -> 22px font
-     Entertainment: 84px diameter -> 16px font
-  */
-  #p-des .label-svg text{font-size:56px}
-  #p-soc .label-svg text{font-size:42px}
-  #p-ai .label-svg text{font-size:32px}
-  #p-mus .label-svg text{font-size:22px}
-  #p-ent .label-svg text{font-size:16px}
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="./styles.css">
 
-  .planet.peeking .label-svg text, .planet:hover .label-svg text, .planet.open .label-svg text{
-    fill:oklch(var(--warm-astra-300));
-    font-weight:var(--font-weight-sans-medium);
-  }
-  #p-des.peeking .label-svg text, #p-des:hover .label-svg text{font-size:64px}
-  #p-soc.peeking .label-svg text, #p-soc:hover .label-svg text{font-size:48px}
-  #p-ai.peeking .label-svg text, #p-ai:hover .label-svg text{font-size:36px}
-  #p-mus.peeking .label-svg text, #p-mus:hover .label-svg text{font-size:25px}
-  #p-ent.peeking .label-svg text, #p-ent:hover .label-svg text{font-size:18px}
-
-  /* Orbit tabs — perfect circle around the sphere center */
-  .orbit{
-    position:absolute;left:50%;top:0;transform:translateX(-50%);
-    z-index:25;
-    width:var(--s);height:var(--s);
-    pointer-events:none !important;
-  }
-  .planet.open .orbit{
-    pointer-events:auto !important;
-  }
-  .planet.open .label-svg,
-  .planet.closing .label-svg{
-    pointer-events:none !important;
-  }
-  .planet.open .label-svg text,
-  .planet.closing .label-svg text{
-    pointer-events:none !important;
-  }
-  .tab-dot{
-    position:absolute;width:40px;height:40px;border-radius:50%;
-    background:none;border:none;
-    display:grid;place-items:center;overflow:hidden;
-    cursor:pointer;box-shadow:none;
-    opacity:0;
-    z-index:30;
-    pointer-events:none !important;
-    will-change:transform, opacity, left, top;
-  }
-  .planet.open .tab-dot{
-    pointer-events:auto !important;
-  }
-  .planet:not(.open) .tab-name,
-  .planet.closing .tab-name{
-    opacity:0 !important;
-    visibility:hidden !important;
-    pointer-events:none !important;
-  }
-  #p-des .tab-dot{width:40px;height:40px}
-  #p-soc .tab-dot{width:36px;height:36px}
-  #p-ai .tab-dot{width:34px;height:34px}
-  #p-mus .tab-dot{width:32px;height:32px}
-  #p-ent .tab-dot{width:28px;height:28px}
-
-  /* 3D Sphere styling for Design planet */
-  #p-des .orb{
-    filter: drop-shadow(0 20px 42px rgba(0,0,0,0.52));
-  }
-  #p-des .orb img{
-    display:none;
-  }
-  .planet-3d-canvas{
-    width:100%;
-    height:100%;
-    border-radius:50%;
-    display:block;
-    pointer-events:none;
-    cursor:none;
-    touch-action:none;
-    will-change:transform;
-  }
-
-  .tab-dot:hover, .tab-dot:focus-visible{
-    z-index:35;
-  }
-  .tab-dot img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;pointer-events:none}
-  .tab-name{
-    position:absolute;
-    font-size:18px;
-    font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
-    color:#a3a099;
-    font-weight:var(--font-weight-sans-regular);
-    letter-spacing:.01em;
-    opacity:0;
-    white-space:nowrap;
-    pointer-events:none;
-    z-index:40;
-    transform-origin:0 50%;
-    transform:rotate(var(--rot, -90deg)) translateY(-50%) translateX(-4px);
-    transition:opacity .2s cubic-bezier(.2,.7,.2,1), transform .2s cubic-bezier(.2,.7,.2,1), color .2s;
-    text-shadow:0 2px 8px rgba(0,0,0,.85), 0 1px 2px rgba(0,0,0,.9);
-    user-select:none;
-  }
-  #p-des .tab-name{font-size:18px}
-  #p-soc .tab-name{font-size:16px}
-  #p-ai .tab-name{font-size:15px}
-  #p-mus .tab-name{font-size:14px}
-  #p-ent .tab-name{font-size:13px}
-
-  .tab-name.visible,
-  .tab-dot:hover + .tab-name,
-  .tab-dot:focus-visible + .tab-name{
-    opacity:1;
-    color:#ece9e4;
-    transform:rotate(var(--rot, -90deg)) translateY(-50%) translateX(0px);
-  }
-  .tab-name.flipped{
-    transform-origin:0 50%;
-    transform:rotate(var(--rot, -90deg)) translateY(-50%) translateX(calc(-100% + 4px));
-  }
-  .tab-name.flipped.visible,
-  .tab-dot:hover + .tab-name.flipped,
-  .tab-dot:focus-visible + .tab-name.flipped{
-    opacity:1;
-    color:#ece9e4;
-    transform:rotate(var(--rot, -90deg)) translateY(-50%) translateX(-100%);
-  }
-  /* Custom cursor from cursor.svg */
-  #customCursor{
-    position:fixed;left:0;top:0;width:38px;height:38px;z-index:999;
-    background:url('./cursor.svg') no-repeat center/contain;
-    pointer-events:none;opacity:0;transition:opacity .15s;
-    filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));
-  }
-  #customCursor.on{opacity:1}
-  @media (hover:none), (prefers-reduced-motion:reduce){
-    #customCursor{display:none}
-    body, body a, body button, body input, body .chip, body .planet, body .tab-dot{cursor:auto}
-    .planet,.tab-dot{cursor:pointer}
-  }
-  /* Positions from Default homepage.jpg */
-  #p-ai{left:5.5%;bottom:10%;--s:172px}
-  #p-ent{left:21%;bottom:11.5%;--s:84px}
-  #p-soc{left:52.5%;bottom:19%;--s:228px}
-  #p-mus{left:68.5%;bottom:7.5%;--s:118px}
-  #p-des{left:79.5%;bottom:13%;--s:304px}
-  .customize{
-    position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
-    background:transparent;border:1px solid rgba(255,255,255,.12);
-    color:#d6d4d1;border-radius:999px;padding:8px 16px;font-size:14px;
-    display:flex;gap:8px;align-items:center;cursor:none;z-index:10;
-  }
-  @media (max-width:900px){
-    .search-wrap{width:86vw;margin-top:14vh}
-    #p-soc{left:38%} #p-des{left:60%;--s:220px} #p-ai{--s:130px}
-  }
-  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-  :focus-visible{outline:2px solid #fff;outline-offset:2px}
-</style>
+  <!-- Core Libraries -->
+  <script src="./gsap.min.js"></script>
+  <script src="./three.min.js"></script>
 </head>
 <body>
 <div class="app">
-  <nav class="rail" aria-label="Sidebar (placeholder icons)">
-    <div class="logo" title="Comet logo — PLACEHOLDER, fetch official SVG">⁂</div>
-    <button class="rail-btn solid" title="+">+</button>
-    <button class="rail-btn" title="Discover">▤</button>
-    <button class="rail-btn" title="Spaces">◫</button>
-    <button class="rail-btn" title="Prism">⬡</button>
-    <button class="rail-btn" title="Library">❏</button>
-    <button class="rail-btn" title="History">◷</button>
+  <!-- Sidebar -->
+  <nav class="rail" aria-label="Sidebar navigation">
+    <div class="logo" title="Comet logo">⁂</div>
+    <button class="rail-btn solid" title="New thread" aria-label="New thread">+</button>
+    <button class="rail-btn" title="Discover" aria-label="Discover">▤</button>
+    <button class="rail-btn" title="Spaces" aria-label="Spaces">◫</button>
+    <button class="rail-btn" title="Prism" aria-label="Prism">⬡</button>
+    <button class="rail-btn" title="Library" aria-label="Library">❏</button>
+    <button class="rail-btn" title="History" aria-label="History">◷</button>
     <div class="spacer"></div>
-    <button class="rail-btn" title="Upgrade">↑</button>
-    <button class="rail-btn" title="Notifications">♪</button>
-    <div class="avatar" title="Avatar — PLACEHOLDER"></div>
+    <button class="rail-btn" title="Upgrade" aria-label="Upgrade">↑</button>
+    <button class="rail-btn" title="Notifications" aria-label="Notifications">♪</button>
+    <div class="avatar" title="User avatar" aria-label="User avatar"></div>
   </nav>
 
-  <div class="topbar">
+  <!-- Top bar header -->
+  <header class="topbar">
     <div class="plan-pill"><b style="font-weight:400">Free plan</b> · Upgrade</div>
-    <div class="win-controls"><button class="win-btn">⊞</button><button class="win-btn">☰</button></div>
-  </div>
+    <div class="win-controls">
+      <button class="win-btn" aria-label="Maximize">⊞</button>
+      <button class="win-btn" aria-label="Menu">☰</button>
+    </div>
+  </header>
 
+  <!-- Main content area -->
   <main class="main">
     <div class="search-wrap">
       <div class="eyebrow">Search</div>
       <h1>What do you want to know?</h1>
       <div class="box">
-        <input placeholder="Type / for search modes" aria-label="Search" />
+        <input placeholder="Type / for search modes" aria-label="Search inquiry" />
         <div class="box-row">
-          <button class="icon-btn">+</button>
+          <button class="icon-btn" aria-label="Attach">+</button>
           <span class="chip">⌕ Search ⌄</span>
           <span class="chip dim">🖵 Computer</span>
           <span class="grow"></span>
           <span class="model">Model ⌄</span>
-          <span class="voice"><span style="opacity:.6">🎙</span><button class="go">◫</button></span>
+          <span class="voice"><span style="opacity:.6">🎙</span><button class="go" aria-label="Submit query">◫</button></span>
         </div>
       </div>
     </div>
 
+    <!-- Interactive Planets Field -->
     <div class="field" id="field">
-      <!-- AI -->
-      <div class="planet" id="p-ai" data-size="md" data-name="AI" tabindex="0">
-        <svg class="label-svg" viewBox="0 0 280 280"><path id="arc-ai" d="M 75.5,55.9 A 106 106 0 0 1 204.5,55.9" fill="none"/><text><textPath href="#arc-ai" startOffset="50%" text-anchor="middle">AI</textPath></text></svg>
+      <!-- AI Planet -->
+      <div class="planet" id="p-ai" data-size="md" data-name="AI" tabindex="0" aria-label="AI tab folder">
+        <svg class="label-svg" viewBox="0 0 280 280">
+          <path id="arc-ai" d="M 75.5,55.9 A 106 106 0 0 1 204.5,55.9" fill="none"/>
+          <text><textPath href="#arc-ai" startOffset="50%" text-anchor="middle">AI</textPath></text>
+        </svg>
         <div class="orbit"></div>
-        <div class="orb"><img src="./Planets/planet-avatars.png" alt="AI tab folder" /></div>
+        <div class="orb orb-wrap ai">
+          <div class="orb-glow"></div>
+          <img src="./Planets/planet-avatars.png" alt="AI tab folder" />
+          <canvas id="p-ai-canvas" class="planet-3d-canvas" width="344" height="344"></canvas>
+        </div>
       </div>
-      <!-- Entertainment -->
-      <div class="planet" id="p-ent" data-size="sm" data-name="Entertainment" tabindex="0">
-        <svg class="label-svg" viewBox="0 0 200 200"><path id="arc-ent" d="M 44.2,95.1 A 56 56 0 0 1 155.8,95.1" fill="none"/><text><textPath href="#arc-ent" startOffset="50%" text-anchor="middle">Entertainment</textPath></text></svg>
+
+      <!-- Entertainment Planet -->
+      <div class="planet" id="p-ent" data-size="sm" data-name="Entertainment" tabindex="0" aria-label="Entertainment tab folder">
+        <svg class="label-svg" viewBox="0 0 200 200">
+          <path id="arc-ent" d="M 44.2,95.1 A 56 56 0 0 1 155.8,95.1" fill="none"/>
+          <text><textPath href="#arc-ent" startOffset="50%" text-anchor="middle">Entertainment</textPath></text>
+        </svg>
         <div class="orbit"></div>
-        <div class="orb"><img src="./Planets/planet-with-hover-1.png" alt="Entertainment" /></div>
+        <div class="orb orb-wrap entertainment">
+          <div class="orb-glow"></div>
+          <img src="./Planets/planet-with-hover-1.png" alt="Entertainment" />
+          <canvas id="p-ent-canvas" class="planet-3d-canvas" width="168" height="168"></canvas>
+        </div>
       </div>
-      <!-- Social media -->
-      <div class="planet" id="p-soc" data-size="md" data-name="Social media" tabindex="0">
-        <svg class="label-svg" viewBox="0 0 420 420"><path id="arc-soc" d="M 86,270.5 A 138 138 0 0 1 318.7,125" fill="none"/><text><textPath href="#arc-soc" startOffset="50%" text-anchor="middle">Social media</textPath></text></svg>
+
+      <!-- Social Media Planet -->
+      <div class="planet" id="p-soc" data-size="md" data-name="Social media" tabindex="0" aria-label="Social media tab folder">
+        <svg class="label-svg" viewBox="0 0 420 420">
+          <path id="arc-soc" d="M 86,270.5 A 138 138 0 0 1 318.7,125" fill="none"/>
+          <text><textPath href="#arc-soc" startOffset="50%" text-anchor="middle">Social media</textPath></text>
+        </svg>
         <div class="orbit"></div>
-        <div class="orb"><img src="./Planets/planet-with-hover-6.png" alt="Social media" /></div>
+        <div class="orb orb-wrap social-media">
+          <div class="orb-glow"></div>
+          <img src="./Planets/planet-with-hover-6.png" alt="Social media" />
+          <canvas id="p-soc-canvas" class="planet-3d-canvas" width="456" height="456"></canvas>
+        </div>
       </div>
-      <!-- Music -->
-      <div class="planet" id="p-mus" data-size="sm" data-name="Music" tabindex="0">
-        <svg class="label-svg" viewBox="0 0 240 240"><path id="arc-mus" d="M 100,47.7 A 75 75 0 0 1 194,132.4" fill="none"/><text><textPath href="#arc-mus" startOffset="50%" text-anchor="middle">Music</textPath></text></svg>
+
+      <!-- Music Planet -->
+      <div class="planet" id="p-mus" data-size="sm" data-name="Music" tabindex="0" aria-label="Music tab folder">
+        <svg class="label-svg" viewBox="0 0 240 240">
+          <path id="arc-mus" d="M 100,47.7 A 75 75 0 0 1 194,132.4" fill="none"/>
+          <text><textPath href="#arc-mus" startOffset="50%" text-anchor="middle">Music</textPath></text>
+        </svg>
         <div class="orbit"></div>
-        <div class="orb"><img src="./Planets/planet-with-hover-4.png" alt="Music" /></div>
+        <div class="orb orb-wrap music">
+          <div class="orb-glow"></div>
+          <img src="./Planets/planet-with-hover-4.png" alt="Music" />
+          <canvas id="p-mus-canvas" class="planet-3d-canvas" width="236" height="236"></canvas>
+        </div>
       </div>
-      <!-- Design (hero, with orbit tabs) -->
-      <div class="planet" id="p-des" data-size="lg" data-name="Design" tabindex="0">
-        <svg class="label-svg" viewBox="0 0 400 90"><path id="arc-des" d="M20,78 Q200,2 380,68" fill="none"/><text><textPath href="#arc-des" startOffset="50%" text-anchor="middle">Design</textPath></text></svg>
+
+      <!-- Design Planet (hero, with orbit tabs) -->
+      <div class="planet" id="p-des" data-size="lg" data-name="Design" tabindex="0" aria-label="Design tab folder">
+        <svg class="label-svg" viewBox="0 0 400 90">
+          <path id="arc-des" d="M20,78 Q200,2 380,68" fill="none"/>
+          <text><textPath href="#arc-des" startOffset="50%" text-anchor="middle">Design</textPath></text>
+        </svg>
         <div class="orbit" id="orbit-des"></div>
-        <div class="orb">
+        <div class="orb orb-wrap design">
+          <div class="orb-glow"></div>
           <img src="./Planets/planet-with-hover-5.png" alt="Design tab folder" />
           <canvas id="p-des-canvas" class="planet-3d-canvas" width="608" height="608"></canvas>
         </div>
       </div>
     </div>
+
+    <!-- Custom Cursor -->
     <div id="customCursor"></div>
 
-    <button class="customize">⊞ Customize</button>
+    <button class="customize" aria-label="Customize homepage">⊞ Customize</button>
   </main>
 </div>
 
-<script>
-  // Planet tabs configuration — popular websites with authentic logos, proportional to planet sizes
-  const planetTabsConfig = {
-    'p-des': {
-      gap: 42,
-      centerAngle: 0,
-      spread: 120,
-      dotSize: 40,
-      tabs: [
-        {n:'Behance',       img:'./Tabs/Behance.png',     url:'https://www.behance.net'},
-        {n:'Mobbin',        img:'./Tabs/Mobbin.png',      url:'https://mobbin.com'},
-        {n:'Instagram',     img:'./Tabs/Instagram.png',   url:'https://www.instagram.com'},
-        {n:'Framer',        img:'./Tabs/Framer.png',      url:'https://www.framer.com'},
-        {n:'Pinterest',     img:'./Tabs/Pinterest.png',   url:'https://www.pinterest.com'},
-        {n:'Unsplash',      img:'./Tabs/Unsplash.png',    url:'https://unsplash.com'},
-        {n:'Red Dot Award', img:'./Tabs/RedDotAward.png', url:'https://www.red-dot.org'},
-        {n:'Awwwards',      img:'./Tabs/Awwwards.png',    url:'https://www.awwwards.org'},
-      ]
-    },
-    'p-soc': {
-      gap: 36,
-      centerAngle: -30,
-      spread: 106,
-      dotSize: 36,
-      tabs: [
-        {n:'X',             img:'./Tabs/X.svg',           url:'https://x.com'},
-        {n:'YouTube',       img:'./Tabs/YouTube.svg',     url:'https://www.youtube.com'},
-        {n:'Reddit',        img:'./Tabs/Reddit.svg',      url:'https://www.reddit.com'},
-        {n:'TikTok',        img:'./Tabs/TikTok.svg',      url:'https://www.tiktok.com'},
-        {n:'LinkedIn',      img:'./Tabs/LinkedIn.svg',    url:'https://www.linkedin.com'},
-        {n:'Threads',       img:'./Tabs/Threads.svg',     url:'https://www.threads.net'},
-      ]
-    },
-    'p-ai': {
-      gap: 32,
-      centerAngle: 0,
-      spread: 96,
-      dotSize: 34,
-      tabs: [
-        {n:'ChatGPT',       img:'./Tabs/ChatGPT.svg',     url:'https://chatgpt.com'},
-        {n:'Claude',        img:'./Tabs/Claude.svg',      url:'https://claude.ai'},
-        {n:'Gemini',        img:'./Tabs/Gemini.svg',      url:'https://gemini.google.com'},
-        {n:'Perplexity',    img:'./Tabs/Perplexity.svg',  url:'https://www.perplexity.ai'},
-        {n:'Copilot',       img:'./Tabs/Copilot.svg',     url:'https://copilot.microsoft.com'},
-      ]
-    },
-    'p-mus': {
-      gap: 26,
-      centerAngle: 42,
-      spread: 60,
-      dotSize: 32,
-      tabs: [
-        {n:'Spotify',       img:'./Tabs/Spotify.svg',     url:'https://open.spotify.com'},
-        {n:'Apple Music',   img:'./Tabs/AppleMusic.svg',  url:'https://music.apple.com'},
-        {n:'SoundCloud',    img:'./Tabs/SoundCloud.svg',  url:'https://soundcloud.com'},
-      ]
-    },
-    'p-ent': {
-      gap: 22,
-      centerAngle: 0,
-      spread: 38,
-      dotSize: 28,
-      tabs: [
-        {n:'Netflix',       img:'./Tabs/Netflix.svg',     url:'https://www.netflix.com'},
-        {n:'Twitch',        img:'./Tabs/Twitch.svg',      url:'https://www.twitch.tv'},
-      ]
-    }
-  };
-
-  const planetTabsState = {};
-
-  // Initialize tabs and radial labels for every planet
-  Object.keys(planetTabsConfig).forEach(planetId => {
-    const config = planetTabsConfig[planetId];
-    const planet = document.getElementById(planetId);
-    if (!planet) return;
-    const orbit = planet.querySelector('.orbit');
-    if (!orbit) return;
-
-    const tabElements = [];
-    const labelElements = [];
-
-    config.tabs.forEach((t, i) => {
-      const a = document.createElement('a');
-      a.className = 'tab-dot';
-      a.title = t.n;
-      a.dataset.name = t.n;
-      a.href = t.url;
-      a.target = '_blank';
-      a.rel = 'noopener';
-      a.setAttribute('aria-label', t.n);
-
-      const im = document.createElement('img');
-      im.src = t.img;
-      im.alt = t.n;
-      im.draggable = false;
-      a.appendChild(im);
-
-      const lbl = document.createElement('div');
-      lbl.className = 'tab-name';
-      lbl.id = `${planetId}-tab-label-${i}`;
-      lbl.textContent = t.n;
-      lbl.setAttribute('aria-hidden', 'true');
-
-      a.addEventListener('mouseenter', () => {
-        if (!planet.classList.contains('open')) return;
-        lbl.classList.add('visible');
-        if (typeof gsap !== 'undefined') {
-          gsap.to(a, { scale: 1.18, opacity: 1, duration: 0.2, ease: 'power2.out', overwrite: 'auto' });
-        }
-        const cursor = document.getElementById('customCursor');
-        if (cursor) cursor.classList.add('on');
-      });
-      a.addEventListener('mouseleave', () => {
-        lbl.classList.remove('visible');
-        if (typeof gsap !== 'undefined') {
-          if (planet.classList.contains('open')) {
-            gsap.to(a, { scale: 1, opacity: 0.7, duration: 0.2, ease: 'power2.out', overwrite: 'auto' });
-          } else {
-            gsap.to(a, { scale: 0.45, opacity: 0, duration: 0.15, ease: 'power2.out', overwrite: 'auto' });
-          }
-        }
-      });
-      a.addEventListener('focus', () => {
-        if (!planet.classList.contains('open')) return;
-        lbl.classList.add('visible');
-        if (typeof gsap !== 'undefined') {
-          gsap.to(a, { scale: 1.18, opacity: 1, duration: 0.2, ease: 'power2.out', overwrite: 'auto' });
-        }
-      });
-      a.addEventListener('blur', () => {
-        lbl.classList.remove('visible');
-        if (planet.classList.contains('open') && typeof gsap !== 'undefined') {
-          gsap.to(a, { scale: 1, opacity: 0.7, duration: 0.2, ease: 'power2.out', overwrite: 'auto' });
-        }
-      });
-      a.addEventListener('click', e => {
-        if (!planet.classList.contains('open')) {
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
-        e.stopPropagation(); // let link navigate without toggling planet
-      });
-
-      orbit.appendChild(a);
-      orbit.appendChild(lbl);
-      tabElements.push(a);
-      labelElements.push(lbl);
-    });
-
-    planetTabsState[planetId] = {
-      config,
-      orbit,
-      tabElements,
-      labelElements,
-      coords: []
-    };
-  });
-
-  // Calculate layout geometry for all planet orbits and their tabs
-  function layoutTabs() {
-    Object.keys(planetTabsState).forEach(planetId => {
-      const state = planetTabsState[planetId];
-      const planet = document.getElementById(planetId);
-      if (!state || !planet) return;
-      const s = planet.offsetWidth || (planetId === 'p-des' ? 304 : planetId === 'p-soc' ? 228 : planetId === 'p-ai' ? 172 : planetId === 'p-mus' ? 118 : 84);
-      const { gap, spread, dotSize, tabs } = state.config;
-      const R = s / 2 + gap;
-      const count = tabs.length;
-
-      state.coords = tabs.map((t, i) => {
-        const a = state.tabElements[i];
-        const lbl = state.labelElements[i];
-
-        const centerAngle = (state.config.centerAngle !== undefined) ? state.config.centerAngle : 0;
-        const angDeg = count === 1 ? centerAngle : (centerAngle - spread / 2 + i * (spread / (count - 1)));
-        const ang = angDeg * Math.PI / 180;
-        const cx = s / 2 + R * Math.sin(ang);
-        const cy = s / 2 - R * Math.cos(ang);
-
-        const targetLeft = cx - dotSize / 2;
-        const targetTop = cy - dotSize / 2;
-
-        const ux = Math.sin(ang);
-        const uy = -Math.cos(ang);
-
-        const startLeft = (cx - ux * 24) - dotSize / 2;
-        const startTop = (cy - uy * 24) - dotSize / 2;
-
-        const startX = cx + ux * (dotSize / 2 + 16);
-        const startY = cy + uy * (dotSize / 2 + 16);
-        const isFlipped = (angDeg < -8);
-        const rotDeg = isFlipped ? (angDeg + 90) : (angDeg - 90);
-
-        if (lbl) {
-          lbl.style.left = startX + 'px';
-          lbl.style.top = startY + 'px';
-          lbl.style.setProperty('--rot', `${rotDeg}deg`);
-          if (isFlipped) lbl.classList.add('flipped');
-          else lbl.classList.remove('flipped');
-        }
-
-        if (a) {
-          if (planet.classList.contains('open')) {
-            a.style.left = targetLeft + 'px';
-            a.style.top = targetTop + 'px';
-            a.style.opacity = '0.7';
-            a.style.transform = 'scale(1)';
-          } else if (typeof gsap !== 'undefined') {
-            gsap.set(a, { left: startLeft, top: startTop, scale: 0.45, opacity: 0 });
-          } else {
-            a.style.left = startLeft + 'px';
-            a.style.top = startTop + 'px';
-            a.style.opacity = '0';
-          }
-        }
-
-        return { targetLeft, targetTop, startLeft, startTop, angDeg, rotDeg, cx, cy, ux, uy };
-      });
-    });
-  }
-
-  layoutTabs();
-  window.addEventListener('resize', layoutTabs);
-
-  // Smooth GSAP opening animation
-  function openPlanet(planet) {
-    if (!planet) return;
-    
-    // Smoothly close any other open or closing planets
-    document.querySelectorAll('.planet').forEach(o => {
-      if (o !== planet && (o.classList.contains('open') || o.classList.contains('closing'))) {
-        closePlanet(o, false);
-      }
-    });
-
-    if (planet._activeTL) {
-      planet._activeTL.kill();
-      planet._activeTL = null;
-    }
-
-    planet.classList.remove('closing');
-    planet.classList.add('open', 'peeking');
-
-    const orbitEl = planet.querySelector('.orbit');
-    const labelSvg = planet.querySelector('.label-svg');
-    const img = planet.querySelector('.orb canvas') || planet.querySelector('.orb img');
-
-    if (orbitEl) orbitEl.style.pointerEvents = 'auto';
-    if (labelSvg) labelSvg.style.pointerEvents = 'none';
-
-    const state = planetTabsState[planet.id];
-    const tabsInPlanet = state ? state.tabElements : [];
-    const coords = state ? state.coords : [];
-
-    if (typeof gsap !== 'undefined') {
-      gsap.killTweensOf(img);
-      if (labelSvg) gsap.killTweensOf(labelSvg);
-      gsap.killTweensOf(tabsInPlanet);
-
-      const tl = gsap.timeline({
-        onComplete: () => {
-          planet._activeTL = null;
-        }
-      });
-      planet._activeTL = tl;
-
-      // 1. Planet sphere scales to 1.03
-      if (img) {
-        tl.to(img, { scale: 1.03, duration: 0.35, ease: 'power2.out' }, 0);
-      }
-
-      // 2. Curved label fades out immediately
-      if (labelSvg) {
-        tl.to(labelSvg, {
-          opacity: 0,
-          duration: 0.15,
-          ease: 'power2.out'
-        }, 0);
-      }
-
-      // 3. Staggered tabs fanning out from inside the sphere (70% default opacity)
-      if (tabsInPlanet.length > 0) {
-        tl.fromTo(tabsInPlanet,
-          {
-            left: i => (coords[i] ? coords[i].startLeft : 0),
-            top: i => (coords[i] ? coords[i].startTop : 0),
-            scale: 0.45,
-            opacity: 0
-          },
-          {
-            left: i => (coords[i] ? coords[i].targetLeft : 0),
-            top: i => (coords[i] ? coords[i].targetTop : 0),
-            scale: 1,
-            opacity: 0.7,
-            duration: 0.35,
-            ease: 'back.out(1.35)',
-            stagger: { each: 0.02, from: 'center' }
-          },
-          0.04
-        );
-      }
-    } else {
-      if (labelSvg) labelSvg.style.opacity = '0';
-      tabsInPlanet.forEach((tab, i) => {
-        if (coords[i]) {
-          tab.style.left = coords[i].targetLeft + 'px';
-          tab.style.top = coords[i].targetTop + 'px';
-          tab.style.opacity = '0.7';
-          tab.style.transform = 'scale(1)';
-        }
-      });
-    }
-  }
-
-  // Smooth GSAP closing animation to default state
-  function closePlanet(planet, isHoveredStill = false) {
-    if (!planet || (!planet.classList.contains('open') && !planet.classList.contains('closing'))) return;
-
-    if (planet._activeTL) {
-      planet._activeTL.kill();
-      planet._activeTL = null;
-    }
-
-    const orbitEl = planet.querySelector('.orbit');
-    const labelSvg = planet.querySelector('.label-svg');
-    const img = planet.querySelector('.orb canvas') || planet.querySelector('.orb img');
-    const state = planetTabsState[planet.id];
-    const tabsInPlanet = state ? state.tabElements : [];
-    const coords = state ? state.coords : [];
-
-    // Immediately hide any hover text
-    planet.querySelectorAll('.tab-name').forEach(lbl => lbl.classList.remove('visible'));
-
-    planet.classList.add('closing');
-    planet.classList.remove('open');
-    if (!isHoveredStill) {
-      planet.classList.remove('peeking');
-    }
-
-    if (orbitEl) orbitEl.style.pointerEvents = 'none';
-    if (labelSvg) labelSvg.style.pointerEvents = 'none';
-
-    if (typeof gsap !== 'undefined') {
-      gsap.killTweensOf(tabsInPlanet);
-      if (labelSvg) gsap.killTweensOf(labelSvg);
-      if (img) gsap.killTweensOf(img);
-
-      const tl = gsap.timeline({
-        onComplete: () => {
-          planet.classList.remove('closing');
-          planet._activeTL = null;
-          if (orbitEl) orbitEl.style.pointerEvents = '';
-          if (labelSvg) {
-            labelSvg.style.pointerEvents = '';
-            labelSvg.style.opacity = '1';
-          }
-        }
-      });
-      planet._activeTL = tl;
-
-      // 1. Tab icons collapse smoothly inward toward sphere rim and dissolve quickly
-      if (tabsInPlanet.length > 0) {
-        tl.to(tabsInPlanet, {
-          left: i => (coords[i] ? coords[i].startLeft : 0),
-          top: i => (coords[i] ? coords[i].startTop : 0),
-          scale: 0.35,
-          opacity: 0,
-          duration: 0.2,
-          ease: 'power2.in',
-          stagger: { each: 0.015, from: 'edges' }
-        }, 0);
-      }
-
-      // 2. Curved label rises and fades smoothly back into view ONLY AFTER tabs have faded out
-      // This completely prevents ANY overlap between curved text and tab icons when cursor is removed fast
-      if (labelSvg) {
-        tl.fromTo(labelSvg,
-          { opacity: 0 },
-          { opacity: 1, duration: 0.26, ease: 'power2.out' },
-          0.18
-        );
-      }
-
-      // 3. Planet image smoothly eases back to 1.0 (or 1.05 if still hovered)
-      if (img) {
-        tl.to(img, {
-          scale: isHoveredStill ? 1.05 : 1.0,
-          duration: 0.3,
-          ease: 'power2.out'
-        }, 0);
-      }
-    } else {
-      planet.classList.remove('closing');
-      if (labelSvg) {
-        labelSvg.style.opacity = '1';
-        labelSvg.style.pointerEvents = '';
-      }
-      tabsInPlanet.forEach((tab, i) => {
-        if (coords[i]) {
-          tab.style.left = coords[i].startLeft + 'px';
-          tab.style.top = coords[i].startTop + 'px';
-          tab.style.opacity = '0';
-          tab.style.transform = 'scale(0.45)';
-        }
-      });
-    }
-  }
-
-  // Distance from mouse point to element bounding rect
-  function getMinDistanceToPlanetCluster(x, y, planet) {
-    const rects = [];
-    const orb = planet.querySelector('.orb') || planet;
-    rects.push(orb.getBoundingClientRect());
-
-    // Only include label in distance cluster when planet is NOT open
-    if (!planet.classList.contains('open')) {
-      const lbl = planet.querySelector('.label-svg');
-      if (lbl) rects.push(lbl.getBoundingClientRect());
-    }
-
-    // Include all active tabs in cluster
-    planet.querySelectorAll('.tab-dot').forEach(dot => {
-      rects.push(dot.getBoundingClientRect());
-    });
-
-    planet.querySelectorAll('.tab-name.visible').forEach(nameEl => {
-      rects.push(nameEl.getBoundingClientRect());
-    });
-
-    let minDist = Infinity;
-    for (const r of rects) {
-      if (r.width === 0 && r.height === 0) continue;
-      const dx = Math.max(r.left - x, 0, x - r.right);
-      const dy = Math.max(r.top - y, 0, y - r.bottom);
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < minDist) minDist = dist;
-      if (minDist === 0) return 0;
-    }
-    return minDist;
-  }
-
-  // Global custom cursor & distance tracking for open planets
-  const customCursor = document.getElementById('customCursor');
-  window.addEventListener('mousemove', e => {
-    customCursor.style.transform = `translate(${e.clientX - 6}px, ${e.clientY - 4}px)`;
-    customCursor.classList.add('on');
-
-    // When a planet is clicked and open, return to default state smoothly only when mouse moves > 50px away
-    document.querySelectorAll('.planet.open').forEach(p => {
-      const dist = getMinDistanceToPlanetCluster(e.clientX, e.clientY, p);
-      if (dist > 50) {
-        closePlanet(p, false);
-      }
-    });
-  });
-
-  document.documentElement.addEventListener('mouseleave', () => {
-    customCursor.classList.remove('on');
-    // If cursor completely leaves window, close open planets cleanly to prevent stuck states
-    document.querySelectorAll('.planet.open').forEach(p => {
-      closePlanet(p, false);
-    });
-    document.querySelectorAll('.planet').forEach(p => {
-      p.classList.remove('peeking');
-      const img = p.querySelector('.orb canvas') || p.querySelector('.orb img');
-      if (img && typeof gsap !== 'undefined') {
-        gsap.to(img, { scale: 1.0, duration: 0.25, ease: 'power2.out', overwrite: 'auto' });
-      }
-      if (!p.classList.contains('open')) {
-        const state = planetTabsState[p.id];
-        if (state && typeof gsap !== 'undefined') {
-          gsap.killTweensOf(state.tabElements);
-          gsap.set(state.tabElements, { opacity: 0, scale: 0.45 });
-          p.querySelectorAll('.tab-name').forEach(lbl => lbl.classList.remove('visible'));
-        }
-      }
-    });
-  });
-
-  function showCursor(){ customCursor.classList.add('on'); }
-  function hideCursor(){ /* keep global cursor on — no-op */ }
-
-  document.querySelectorAll('.planet').forEach(p => {
-    const img = p.querySelector('.orb canvas') || p.querySelector('.orb img');
-
-    p.addEventListener('mouseenter', () => {
-      p.classList.add('peeking');
-      if (!p.classList.contains('open') && !p.classList.contains('closing') && img && typeof gsap !== 'undefined') {
-        gsap.killTweensOf(img);
-        gsap.to(img, { scale: 1.05, duration: 0.32, ease: 'power2.out', overwrite: 'auto' });
-      }
-    });
-
-    // Hover disappears instantly when removing cursor from the planet or text (if not open)
-    p.addEventListener('mouseleave', e => {
-      if (e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.planet') === p) return;
-      if (!p.classList.contains('open') && !p.classList.contains('closing')) {
-        p.classList.remove('peeking');
-        if (img && typeof gsap !== 'undefined') {
-          gsap.killTweensOf(img);
-          gsap.to(img, { scale: 1.0, duration: 0.28, ease: 'power2.out', overwrite: 'auto' });
-        }
-        const state = planetTabsState[p.id];
-        if (state && typeof gsap !== 'undefined') {
-          gsap.killTweensOf(state.tabElements);
-          gsap.set(state.tabElements, { opacity: 0, scale: 0.45 });
-          p.querySelectorAll('.tab-name').forEach(lbl => lbl.classList.remove('visible'));
-        }
-      }
-    });
-
-    // Click toggles orbit tabs — smoothly blossoms or collapses
-    p.addEventListener('click', () => {
-      if (p.classList.contains('open')) {
-        closePlanet(p, true);
-      } else {
-        openPlanet(p);
-        showCursor();
-      }
-    });
-
-    p.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        p.click();
-      }
-      if (e.key === 'Escape') {
-        closePlanet(p, false);
-      }
-    });
-  });
-
-  // Label hover/click acts in sync with planet
-  document.querySelectorAll('.label-svg').forEach(lbl => {
-    const p = lbl.closest('.planet');
-    if (!p) return;
-    const img = p.querySelector('.orb canvas') || p.querySelector('.orb img');
-    const target = lbl.querySelector('text') || lbl;
-
-    target.addEventListener('mouseenter', () => {
-      p.classList.add('peeking');
-      if (!p.classList.contains('open') && !p.classList.contains('closing') && img && typeof gsap !== 'undefined') {
-        gsap.killTweensOf(img);
-        gsap.to(img, { scale: 1.05, duration: 0.32, ease: 'power2.out', overwrite: 'auto' });
-      }
-    });
-
-    target.addEventListener('mouseleave', e => {
-      if (e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.planet') === p) return;
-      if (!p.classList.contains('open') && !p.classList.contains('closing')) {
-        p.classList.remove('peeking');
-        if (img && typeof gsap !== 'undefined') {
-          gsap.killTweensOf(img);
-          gsap.to(img, { scale: 1.0, duration: 0.28, ease: 'power2.out', overwrite: 'auto' });
-        }
-        const state = planetTabsState[p.id];
-        if (state && typeof gsap !== 'undefined') {
-          gsap.killTweensOf(state.tabElements);
-          gsap.set(state.tabElements, { opacity: 0, scale: 0.45 });
-          p.querySelectorAll('.tab-name').forEach(lbl => lbl.classList.remove('visible'));
-        }
-      }
-    });
-
-    target.addEventListener('click', e => {
-      e.stopPropagation();
-      p.click();
-    });
-  });
-
-  // Click empty field closes any open planets smoothly
-  document.getElementById('field').addEventListener('click', e => {
-    if (e.target.id === 'field') {
-      document.querySelectorAll('.planet.open').forEach(o => closePlanet(o, false));
-    }
-  });
-
-  // 3D Model of the Design sphere (#p-des) with interactive rolling on scroll
-  function initDesign3DSphere() {
-    const canvas = document.getElementById('p-des-canvas');
-    const planetEl = document.getElementById('p-des');
-    if (!canvas || !planetEl) return;
-
-    if (typeof THREE === 'undefined') {
-      setTimeout(initDesign3DSphere, 60);
-      return;
-    }
-
-    const size = 304;
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      alpha: true,
-      antialias: true,
-      powerPreference: 'high-performance'
-    });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setSize(size, size, false);
-    renderer.setClearColor(0x000000, 0);
-
-    const scene = new THREE.Scene();
-
-    // Perspective camera with realistic spherical curvature and edge foreshortening
-    const fov = 35;
-    const camera = new THREE.PerspectiveCamera(fov, 1, 0.1, 50);
-    const halfFovRad = (fov / 2) * Math.PI / 180;
-    camera.position.z = 1 / Math.sin(halfFovRad); // ~3.3255 for perfect circular silhouette fit
-    camera.lookAt(0, 0, 0);
-
-    // Volumetric 3D Lighting setup:
-    // 1. Key Light: Sunlit celestial beam creating rich directional terminator shadow
-    const keyLight = new THREE.DirectionalLight(0xfffaec, 1.4);
-    keyLight.position.set(2.4, 2.6, 3.2);
-    scene.add(keyLight);
-
-    // 2. Cool cyan fill light harmonizing with the glowing atmospheric vein
-    const fillLight = new THREE.DirectionalLight(0x28a2b5, 0.6);
-    fillLight.position.set(-2.8, -1.2, 1.8);
-    scene.add(fillLight);
-
-    // 3. Rim / Limb light defining the spherical contour in 3D space
-    const rimLight = new THREE.DirectionalLight(0xe8d0b2, 0.45);
-    rimLight.position.set(-1.2, 2.2, -2.4);
-    scene.add(rimLight);
-
-    // 4. Ambient light: deep warm tone allowing natural 3D shadows and contrast
-    const ambientLight = new THREE.AmbientLight(0x383026, 0.65);
-    scene.add(ambientLight);
-
-    const sphereGroup = new THREE.Group();
-    scene.add(sphereGroup);
-
-    let sphereMesh = null;
-    let rotX = 0.05;
-    let rotY = 0.55;
-    let velX = 0;
-    let velY = 0;
-
-    function buildMesh(texture, bumpTexture) {
-      if (sphereMesh) sphereGroup.remove(sphereMesh);
-      // High-poly sphere geometry for smooth 3D curvature
-      const geometry = new THREE.SphereGeometry(1, 96, 96);
-      const material = new THREE.MeshStandardMaterial({
-        map: texture,
-        bumpMap: bumpTexture || null,
-        bumpScale: 0.04,
-        roughness: 0.62,
-        metalness: 0.08
-      });
-      sphereMesh = new THREE.Mesh(geometry, material);
-      sphereMesh.rotation.x = rotX;
-      sphereMesh.rotation.y = rotY;
-      sphereGroup.add(sphereMesh);
-    }
-
-    // Load the 360° equirectangular texture map
-    const texLoader = new THREE.TextureLoader();
-    texLoader.load(
-      './Planets/design-equirectangular.jpg',
-      tex => {
-        tex.wrapS = THREE.RepeatWrapping;
-        tex.wrapT = THREE.ClampToEdgeWrapping;
-        tex.minFilter = THREE.LinearMipmapLinearFilter;
-        tex.generateMipmaps = true;
-
-        // Generate height/bump map dynamically from texture for realistic dune surface relief
-        let bumpTex = null;
-        try {
-          const bCanvas = document.createElement('canvas');
-          const bw = tex.image.width || 1024;
-          const bh = tex.image.height || 512;
-          bCanvas.width = bw;
-          bCanvas.height = bh;
-          const bctx = bCanvas.getContext('2d');
-          bctx.drawImage(tex.image, 0, 0, bw, bh);
-          const imgData = bctx.getImageData(0, 0, bw, bh);
-          const data = imgData.data;
-
-          for (let p = 0; p < data.length; p += 4) {
-            const r = data[p];
-            const g = data[p + 1];
-            const b = data[p + 2];
-            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-            data[p] = lum;
-            data[p + 1] = lum;
-            data[p + 2] = lum;
-          }
-          bctx.putImageData(imgData, 0, 0);
-
-          bumpTex = new THREE.CanvasTexture(bCanvas);
-          bumpTex.wrapS = THREE.RepeatWrapping;
-          bumpTex.wrapT = THREE.ClampToEdgeWrapping;
-          bumpTex.minFilter = THREE.LinearMipmapLinearFilter;
-          bumpTex.generateMipmaps = true;
-        } catch (e) {
-          console.warn('Bump map generation skipped:', e);
-        }
-
-        buildMesh(tex, bumpTex);
-      },
-      undefined,
-      err => {
-        console.warn('Failed loading equirectangular map, falling back:', err);
-        const fallbackTex = texLoader.load('./Planets/planet-with-hover-5.png');
-        buildMesh(fallbackTex, null);
-      }
-    );
-
-    // Cursor tracking for hover movement & placement rolling
-    let lastMouseX = null;
-    let lastMouseY = null;
-    let cursorNormX = 0;
-    let cursorNormY = 0;
-    let isMouseOverPlanet = false;
-
-    planetEl.addEventListener('mouseenter', e => {
-      isHovered = true;
-      isMouseOverPlanet = true;
-      lastMouseX = e.clientX;
-      lastMouseY = e.clientY;
-      const rect = canvas.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      cursorNormX = Math.max(-1, Math.min(1, (e.clientX - cx) / (rect.width / 2)));
-      cursorNormY = Math.max(-1, Math.min(1, (e.clientY - cy) / (rect.height / 2)));
-    });
-
-    planetEl.addEventListener('mousemove', e => {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.clientX;
-      const clientY = e.clientY;
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-
-      // Normalized cursor placement (-1 to +1 from sphere center)
-      cursorNormX = Math.max(-1, Math.min(1, (clientX - cx) / (rect.width / 2)));
-      cursorNormY = Math.max(-1, Math.min(1, (clientY - cy) / (rect.height / 2)));
-
-      if (lastMouseX !== null && lastMouseY !== null) {
-        const deltaX = clientX - lastMouseX;
-        const deltaY = clientY - lastMouseY;
-
-        // Moving cursor while hovering rolls the sphere in the cursor's travel direction
-        velY += deltaX * 0.0022;
-        velX += deltaY * 0.0022;
-      }
-
-      lastMouseX = clientX;
-      lastMouseY = clientY;
-    });
-
-    planetEl.addEventListener('mouseleave', () => {
-      isHovered = false;
-      isMouseOverPlanet = false;
-      lastMouseX = null;
-      lastMouseY = null;
-      cursorNormX = 0;
-      cursorNormY = 0;
-    });
-
-    // Roll in place when hovering the sphere and scrolling (reduced, graceful speed)
-    planetEl.addEventListener('wheel', e => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const deltaFactor = e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 300 : 1;
-      const dy = e.deltaY * deltaFactor;
-      const dx = e.deltaX * deltaFactor;
-
-      // Reduced, controlled scroll rolling speed
-      velX += dy * 0.0009;
-      velY += dx * 0.0009;
-    }, { passive: false });
-
-    // Touch swipe support for mobile
-    let touchStartX = 0;
-    let touchStartY = 0;
-    planetEl.addEventListener('touchstart', e => {
-      if (e.touches.length === 1) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-      }
-    }, { passive: true });
-
-    planetEl.addEventListener('touchmove', e => {
-      if (e.touches.length === 1) {
-        const dx = e.touches[0].clientX - touchStartX;
-        const dy = e.touches[0].clientY - touchStartY;
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        velX -= dy * 0.0028;
-        velY += dx * 0.0028;
-      }
-    }, { passive: true });
-
-    // Physics render loop with inertia & momentum
-    function render() {
-      requestAnimationFrame(render);
-
-      if (sphereMesh) {
-        // Organic directional rolling influenced by cursor placement on hover
-        if (isMouseOverPlanet) {
-          velY += cursorNormX * 0.00032;
-          velX += cursorNormY * 0.00032;
-        }
-
-        // Clamp peak velocity for buttery smoothness
-        const maxVel = 0.045;
-        velX = Math.max(-maxVel, Math.min(maxVel, velX));
-        velY = Math.max(-maxVel, Math.min(maxVel, velY));
-
-        rotX += velX;
-        rotY += velY;
-
-        sphereMesh.rotation.x = rotX;
-        sphereMesh.rotation.y = rotY;
-
-        // Smooth damping
-        velX *= 0.90;
-        velY *= 0.90;
-
-        if (Math.abs(velX) < 0.00002) velX = 0;
-        if (Math.abs(velY) < 0.00002) velY = 0;
-      }
-
-      renderer.render(scene, camera);
-    }
-    requestAnimationFrame(render);
-  }
-
-  // Initialize once DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initDesign3DSphere);
-  } else {
-    initDesign3DSphere();
-  }
-</script>
+<!-- Main Application Script -->
+<script type="module" src="./js/main.js"></script>
 </body>
 </html>

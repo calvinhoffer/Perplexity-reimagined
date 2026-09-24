@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Comet Interactive Planets",
+  "version": "1.0.0",
+  "description": "Interactive 3D planet orbits and tab folders for Comet.",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.perplexity.ai/*",
+        "https://perplexity.ai/*",
+        "https://*.comet.com/*",
+        "https://comet.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "Planets/*",
+        "Tabs/*",
+        "styles.css",
+        "cursor.svg",
+        "three.min.js",
+        "gsap.min.js",
+        "js/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
