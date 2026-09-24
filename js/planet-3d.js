@@ -1,5 +1,3 @@
-import { getAssetUrl } from './utils.js';
-
 /**
  * 3D Interactive WebGL Planet Spheres powered by Three.js
  * Features:
@@ -434,7 +432,7 @@ export function initInteractive3DPlanets() {
     'p-des': setupPlanet3DSphere({
       planetId: 'p-des',
       canvasId: 'p-des-canvas',
-      imageSrc: getAssetUrl('./Planets/planet-with-hover-5.png'),
+      imageSrc: './Planets/planet-with-hover-5.png',
       size: 304,
       glowColor: 'vec3(1.0, 0.98, 0.95)',
       hoverSpinRate: 0.0012
@@ -442,7 +440,7 @@ export function initInteractive3DPlanets() {
     'p-soc': setupPlanet3DSphere({
       planetId: 'p-soc',
       canvasId: 'p-soc-canvas',
-      imageSrc: getAssetUrl('./Planets/planet-with-hover-6.png'),
+      imageSrc: './Planets/planet-with-hover-6.png',
       size: 228,
       useBasicMaterial: true,
       noFresnel: true,
@@ -451,7 +449,7 @@ export function initInteractive3DPlanets() {
     'p-ai': setupPlanet3DSphere({
       planetId: 'p-ai',
       canvasId: 'p-ai-canvas',
-      imageSrc: getAssetUrl('./Planets/planet-avatars.png'),
+      imageSrc: './Planets/planet-avatars.png',
       size: 172,
       glowColor: 'vec3(0.92, 1.0, 0.96)',
       hoverSpinRate: 0.0016
@@ -459,7 +457,7 @@ export function initInteractive3DPlanets() {
     'p-mus': setupPlanet3DSphere({
       planetId: 'p-mus',
       canvasId: 'p-mus-canvas',
-      imageSrc: getAssetUrl('./Planets/planet-with-hover-4.png'),
+      imageSrc: './Planets/planet-with-hover-4.png',
       size: 118,
       glowColor: 'vec3(1.0, 0.82, 0.75)',
       hoverSpinRate: 0.0020
@@ -467,7 +465,7 @@ export function initInteractive3DPlanets() {
     'p-ent': setupPlanet3DSphere({
       planetId: 'p-ent',
       canvasId: 'p-ent-canvas',
-      imageSrc: getAssetUrl('./Planets/planet-with-hover-1.png'),
+      imageSrc: './Planets/planet-with-hover-1.png',
       size: 84,
       glowColor: 'vec3(1.0, 0.92, 0.82)',
       hoverSpinRate: 0.0022

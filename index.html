@@ -17,59 +17,42 @@
   <link rel="stylesheet" href="./styles.css">
 
   <!-- Core Libraries -->
-  <script src="./gsap.min.js"></script>
-  <script src="./three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    if (typeof gsap === 'undefined') {
+      document.write('<script src="./gsap.min.js"><\/script>');
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="./three.min.js"><\/script>');
+    }
+  </script>
 </head>
 <body>
 <div class="app">
   <!-- Sidebar -->
   <nav class="rail" aria-label="Sidebar navigation">
-    <a href="https://www.perplexity.ai" class="rail-logo" title="Comet Homepage">
-      <svg class="comet-logo-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2v20M4 7l16 10M20 7L4 17" stroke="#22B8CD" stroke-width="2.2" stroke-linecap="round"/>
-        <rect x="9.5" y="6.5" width="5" height="11" rx="2.5" fill="#191817" stroke="#22B8CD" stroke-width="2"/>
-      </svg>
-    </a>
-
-    <a href="https://www.perplexity.ai" class="rail-btn solid" title="New thread (Ctrl+K)" aria-label="New thread">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-    </a>
-    <a href="https://www.perplexity.ai/discover" class="rail-btn" title="Discover" aria-label="Discover">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-    </a>
-    <a href="https://www.perplexity.ai/spaces" class="rail-btn" title="Spaces" aria-label="Spaces">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
-    </a>
-    <a href="https://www.perplexity.ai/library" class="rail-btn" title="Library" aria-label="Library">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
-    </a>
-    <button class="rail-btn" id="historyToggleBtn" title="History" aria-label="History">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    </button>
-
+    <div class="logo" title="Comet logo">⁂</div>
+    <button class="rail-btn solid" title="New thread" aria-label="New thread">+</button>
+    <button class="rail-btn" title="Discover" aria-label="Discover">▤</button>
+    <button class="rail-btn" title="Spaces" aria-label="Spaces">◫</button>
+    <button class="rail-btn" title="Prism" aria-label="Prism">⬡</button>
+    <button class="rail-btn" title="Library" aria-label="Library">❏</button>
+    <button class="rail-btn" title="History" aria-label="History">◷</button>
     <div class="spacer"></div>
-
-    <a href="https://www.perplexity.ai/pro" class="rail-btn upgrade-btn" title="Upgrade to Pro" aria-label="Upgrade to Pro">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22b8cd" stroke-width="2" stroke-linecap="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg>
-    </a>
-    <a href="https://www.perplexity.ai/settings" class="rail-btn" title="Settings" aria-label="Settings">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
-    </a>
-    <a href="https://www.perplexity.ai" class="avatar-link" title="Account profile" aria-label="Account profile">
-      <div class="avatar">C</div>
-    </a>
+    <button class="rail-btn" title="Upgrade" aria-label="Upgrade">↑</button>
+    <button class="rail-btn" title="Notifications" aria-label="Notifications">♪</button>
+    <div class="avatar" title="User avatar" aria-label="User avatar"></div>
   </nav>
 
   <!-- Top bar header -->
   <header class="topbar">
-    <a href="https://www.perplexity.ai/pro" class="plan-pill"><b style="font-weight:500">Free plan</b> · Upgrade</a>
+    <div class="plan-pill"><b style="font-weight:400">Free plan</b> · Upgrade</div>
     <div class="win-controls">
-      <button class="win-btn" title="Fullscreen" aria-label="Fullscreen">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-      </button>
-      <a href="https://www.perplexity.ai" class="win-btn" title="Open in Perplexity" aria-label="Open in Perplexity">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>
-      </a>
+      <button class="win-btn" aria-label="Maximize">⊞</button>
+      <button class="win-btn" aria-label="Menu">☰</button>
     </div>
   </header>
 
@@ -77,31 +60,18 @@
   <main class="main">
     <div class="search-wrap">
       <div class="eyebrow">Search</div>
-      <h1>Where knowledge begins</h1>
-      <form id="search-form" class="box" action="https://www.perplexity.ai/search" method="GET" target="_self">
-        <input name="q" id="search-input" placeholder="Ask anything or search with Comet..." autocomplete="off" aria-label="Search inquiry" autofocus />
+      <h1>What do you want to know?</h1>
+      <div class="box">
+        <input placeholder="Type / for search modes" aria-label="Search inquiry" />
         <div class="box-row">
-          <div class="box-left">
-            <button type="button" class="chip focus-chip" title="Focus search modes">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-              <span>Focus</span>
-            </button>
-            <button type="button" class="icon-btn" title="Attach file">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-            </button>
-          </div>
-          <div class="grow"></div>
-          <div class="box-right">
-            <div class="pro-chip" title="Pro Search">
-              <span class="pro-label">Pro</span>
-              <span class="pro-toggle-dot"></span>
-            </div>
-            <button type="submit" class="submit-btn" id="search-submit" title="Ask Comet (Enter)" aria-label="Submit query">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </button>
-          </div>
+          <button class="icon-btn" aria-label="Attach">+</button>
+          <span class="chip">⌕ Search ⌄</span>
+          <span class="chip dim">🖵 Computer</span>
+          <span class="grow"></span>
+          <span class="model">Model ⌄</span>
+          <span class="voice"><span style="opacity:.6">🎙</span><button class="go" aria-label="Submit query">◫</button></span>
         </div>
-      </form>
+      </div>
     </div>
 
     <!-- Interactive Planets Field -->

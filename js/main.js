@@ -17,46 +17,15 @@ function bootstrap() {
   // 3. Initialize custom cursor tracking
   initCustomCursor(planetManager);
 
-  // 4. Search input & form integration
-  const searchInput = document.getElementById('search-input');
-  const searchForm = document.getElementById('search-form');
-  const proChip = document.querySelector('.pro-chip');
-
-  if (proChip) {
-    proChip.addEventListener('click', () => {
-      proChip.classList.toggle('active');
-    });
-  }
-
-  if (searchForm && searchInput) {
-    searchForm.addEventListener('submit', (e) => {
-      const query = searchInput.value.trim();
-      if (!query) {
-        e.preventDefault();
-        searchInput.focus();
-        return;
-      }
-      // If Pro search is active, pass copilot param
-      if (proChip && proChip.classList.contains('active')) {
-        e.preventDefault();
-        window.location.href = `https://www.perplexity.ai/search?q=${encodeURIComponent(query)}&copilot=true`;
-      }
-    });
-
+  // 4. Search input focus enhancement
+  const searchInput = document.querySelector('.box input');
+  if (searchInput) {
     window.addEventListener('keydown', e => {
-      // '/' or Cmd+K / Ctrl+K focuses search if not currently focused
-      if ((e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key === 'k')) && document.activeElement !== searchInput) {
+      // '/' focuses search if not currently focused
+      if (e.key === '/' && document.activeElement !== searchInput) {
         e.preventDefault();
         searchInput.focus();
       }
-    });
-  }
-
-  // 5. History drawer toggle
-  const historyBtn = document.getElementById('historyToggleBtn');
-  if (historyBtn) {
-    historyBtn.addEventListener('click', () => {
-      window.location.href = 'https://www.perplexity.ai/library';
     });
   }
 }
