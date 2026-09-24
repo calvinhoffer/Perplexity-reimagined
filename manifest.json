@@ -3,6 +3,9 @@
   "name": "Comet Interactive Planets",
   "version": "1.0.0",
   "description": "Interactive 3D planet orbits and tab folders for Comet.",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
   "content_scripts": [
     {
       "matches": [
