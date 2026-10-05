@@ -1,0 +1,77 @@
+name: Deploy both versions to Pages
+
+on:
+  push:
+    branches: [master, static-png-planets]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history, all branches)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Assemble preview site
+        run: |
+          set -e
+          mkdir -p site/3d site/static
+          git archive master | tar -x -C site/3d
+          git archive static-png-planets | tar -x -C site/static
+          cat > site/index.html <<'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Perplexity Reimagined — previews</title>
+            <style>
+              body { background: #171615; color: #ece9e4; font-family: Inter, system-ui, sans-serif;
+                     display: flex; flex-direction: column; align-items: center; justify-content: center;
+                     height: 100vh; margin: 0; gap: 12px; }
+              a { display: block; width: min(420px, 86vw); text-align: center; padding: 18px;
+                  border: 1px solid rgba(255,255,255,.12); border-radius: 14px;
+                  color: #ece9e4; text-decoration: none; font-size: 17px; }
+              a:hover { background: rgba(255,255,255,.06); }
+              small { color: #a3a099; }
+            </style>
+          </head>
+          <body>
+            <h1>Perplexity Reimagined</h1>
+            <a href="./3d/">3D version <br /><small>spinning WebGL planets (master)</small></a>
+            <a href="./static/">Static version <br /><small>crisp PNGs, glow + grow (static-png-planets)</small></a>
+          </body>
+          </html>
+          EOF
+          echo "site/3d:"; ls site/3d | head
+          echo "site/static:"; ls site/static | head
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
