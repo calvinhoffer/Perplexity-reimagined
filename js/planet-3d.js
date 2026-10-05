@@ -29,6 +29,15 @@ export function setupPlanet3DSphere(config) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(size, size, false);
   renderer.setClearColor(0x000000, 0);
+  // Browser zoom changes devicePixelRatio/CSS scale but the canvas backing
+  // store stays frozen -> visible pixelation. Refit on resize (fires on zoom).
+  function fitRenderer() {
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    const s = canvas.clientWidth || size;
+    renderer.setSize(s, s, false);
+    renderer.render(scene, camera);
+  }
+  window.addEventListener('resize', fitRenderer);
   renderer.toneMapping = THREE.NoToneMapping;
   renderer.outputEncoding = THREE.sRGBEncoding;
 
@@ -37,7 +46,8 @@ export function setupPlanet3DSphere(config) {
   camera.position.z = 5;
   camera.lookAt(0, 0, 0);
 
-  const hemi = new THREE.HemisphereLight(0xffffff, 0x222222, 1.4);
+  const hemiIntensity = config.hemiIntensity !== undefined ? config.hemiIntensity : 1.4;
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x222222, hemiIntensity);
   scene.add(hemi);
 
   const keyColor = config.keyColor !== undefined ? config.keyColor : 0xffffff;
@@ -51,6 +61,8 @@ export function setupPlanet3DSphere(config) {
 
   let sphereMesh = null;
   let glowMesh = null;
+  let modelWrap = null;
+  let spinNode = null; // sphereMesh (flat path) or model wrap (GLB path)
   let rotX = 0;
   let rotY = 0;
   let baseRotX = 0;
@@ -75,10 +87,42 @@ export function setupPlanet3DSphere(config) {
 
   let currentTexture = null;
 
+  function addGlow() {
+    if (config.noFresnel || !(glowIntensity > 0)) return;
+    if (glowMesh) sphereGroup.remove(glowMesh);
+
+    const glowGeo = new THREE.SphereGeometry(1.006, 64, 64);
+    const glowMat = new THREE.ShaderMaterial({
+      vertexShader: `
+        varying vec3 vNormal;
+        void main() {
+          vNormal = normalize(normalMatrix * normal);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vNormal;
+        void main() {
+          float fresnel = pow(1.0 - abs(vNormal.z), 3.2);
+          gl_FragColor = vec4(${glowColorVec} * (fresnel * ${glowIntensity.toFixed(2)}), fresnel * ${glowIntensity.toFixed(2)});
+        }
+      `,
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.FrontSide
+    });
+    glowMesh = new THREE.Mesh(glowGeo, glowMat);
+    sphereGroup.add(glowMesh);
+  }
+
   function buildMesh(texture) {
     currentTexture = texture;
     if (sphereMesh) sphereGroup.remove(sphereMesh);
-    if (glowMesh) sphereGroup.remove(glowMesh);
+    if (modelWrap) {
+      sphereGroup.remove(modelWrap);
+      modelWrap = null;
+    }
 
     const isBasic = config.useBasicMaterial === true;
     const geometry = new THREE.SphereGeometry(1, 64, 64);
@@ -97,112 +141,164 @@ export function setupPlanet3DSphere(config) {
     }
     sphereMesh = new THREE.Mesh(geometry, material);
     sphereGroup.add(sphereMesh);
+    spinNode = sphereMesh;
 
-    if (!config.noFresnel && glowIntensity > 0) {
-      const glowGeo = new THREE.SphereGeometry(1.006, 64, 64);
-      const glowMat = new THREE.ShaderMaterial({
-        vertexShader: `
-          varying vec3 vNormal;
-          void main() {
-            vNormal = normalize(normalMatrix * normal);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: `
-          varying vec3 vNormal;
-          void main() {
-            float fresnel = pow(1.0 - abs(vNormal.z), 3.2);
-            gl_FragColor = vec4(${glowColorVec} * (fresnel * ${glowIntensity.toFixed(2)}), fresnel * ${glowIntensity.toFixed(2)});
-          }
-        `,
-        blending: THREE.AdditiveBlending,
-        transparent: true,
-        depthWrite: false,
-        side: THREE.FrontSide
-      });
-      glowMesh = new THREE.Mesh(glowGeo, glowMat);
-      sphereGroup.add(glowMesh);
-    }
+    addGlow();
 
     // Initial render of static frontal view
     renderer.render(scene, camera);
   }
 
-  // Equirectangular spherical texture mapping
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = () => {
-    try {
-      const offCanvas = document.createElement('canvas');
-      const W = 1024;
-      const H = 512;
-      offCanvas.width = W;
-      offCanvas.height = H;
-      const ctx = offCanvas.getContext('2d');
-
-      const srcCanvas = document.createElement('canvas');
-      const sw = img.naturalWidth || 888;
-      const sh = img.naturalHeight || 888;
-      srcCanvas.width = sw;
-      srcCanvas.height = sh;
-      const sctx = srcCanvas.getContext('2d');
-      sctx.drawImage(img, 0, 0);
-
-      const srcData = sctx.getImageData(0, 0, sw, sh);
-      const sPixels = srcData.data;
-      const cx = sw / 2;
-      const cy = sh / 2;
-      const R = (Math.min(sw, sh) / 2) - 4;
-
-      const outData = ctx.createImageData(W, H);
-      const outPixels = outData.data;
-
-      for (let j = 0; j < H; j++) {
-        const v = j / (H - 1);
-        const phi = (v - 0.5) * Math.PI;
-        const cosPhi = Math.cos(phi);
-        const y = Math.sin(phi);
-
-        for (let i = 0; i < W; i++) {
-          const u = i / (W - 1);
-          const theta = (u - 0.25) * 2.0 * Math.PI;
-          const x = cosPhi * Math.sin(theta);
-
-          const imgX = Math.round(cx + x * R);
-          const imgY = Math.round(cy - y * R);
-
-          const clampX = Math.max(0, Math.min(sw - 1, imgX));
-          const clampY = Math.max(0, Math.min(sh - 1, imgY));
-
-          const sIdx = (clampY * sw + clampX) * 4;
-          const oIdx = (j * W + i) * 4;
-
-          outPixels[oIdx] = sPixels[sIdx];
-          outPixels[oIdx + 1] = sPixels[sIdx + 1];
-          outPixels[oIdx + 2] = sPixels[sIdx + 2];
-          outPixels[oIdx + 3] = 255;
-        }
+  // GLB model path (e.g. Design planet): used as-authored, recentered and
+  // uniformly scaled to unit bounding radius so framing, hover scale-up and
+  // the fresnel glow stay pixel-identical to the procedural sphere.
+  function loadGLBModel() {
+    return new Promise((resolve, reject) => {
+      let loader;
+      try {
+        loader = new THREE.GLTFLoader();
+      } catch (e) {
+        reject(e);
+        return;
       }
+      loader.load(config.glbSrc,
+        gltf => {
+          try {
+            const model = gltf.scene || (gltf.scenes && gltf.scenes[0]);
+            if (!model) throw new Error('GLB contains no scene');
+            if (sphereMesh) {
+              sphereGroup.remove(sphereMesh);
+              sphereMesh = null;
+            }
+            if (modelWrap) {
+              sphereGroup.remove(modelWrap);
+              modelWrap = null;
+            }
+            modelWrap = new THREE.Group();
+            modelWrap.add(model);
+            // Optional per-planet roughness tune for authored GLB materials
+            // (higher = softer specular response, less washout under the key)
+            if (config.roughnessOverride !== undefined) {
+              modelWrap.traverse(o => {
+                if (o.isMesh && o.material && 'roughness' in o.material) {
+                  o.material.roughness = config.roughnessOverride;
+                  o.material.needsUpdate = true;
+                }
+              });
+            }
+            const box = new THREE.Box3().setFromObject(model);
+            // Fit by longest box edge (not bounding-sphere-of-box, which
+            // overestimates spheres: sqrt(3) for a unit sphere and shrinks it)
+            const edge = new THREE.Vector3();
+            box.getSize(edge);
+            const extent = Math.max(edge.x, edge.y, edge.z) / 2;
+            if (!(extent > 0)) throw new Error('GLB has empty bounds');
+            model.position.sub(box.getCenter(new THREE.Vector3()));
+            modelWrap.scale.setScalar(1 / extent);
+            sphereGroup.add(modelWrap);
+            spinNode = modelWrap;
+            addGlow();
+            renderer.render(scene, camera);
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        },
+        undefined,
+        err => reject(err || new Error('GLB load error'))
+      );
+    });
+  }
 
-      ctx.putImageData(outData, 0, 0);
+  // Equirectangular spherical texture mapping from a flat image (fallback path)
+  function loadFlatTexture() {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const offCanvas = document.createElement('canvas');
+        const W = 1024;
+        const H = 512;
+        offCanvas.width = W;
+        offCanvas.height = H;
+        const ctx = offCanvas.getContext('2d');
 
-      const texture = new THREE.CanvasTexture(offCanvas);
-      texture.encoding = THREE.sRGBEncoding;
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.ClampToEdgeWrapping;
-      texture.minFilter = THREE.LinearMipmapLinearFilter;
-      texture.generateMipmaps = true;
+        const srcCanvas = document.createElement('canvas');
+        const sw = img.naturalWidth || 888;
+        const sh = img.naturalHeight || 888;
+        srcCanvas.width = sw;
+        srcCanvas.height = sh;
+        const sctx = srcCanvas.getContext('2d');
+        sctx.drawImage(img, 0, 0);
 
-      buildMesh(texture);
-    } catch (err) {
-      console.warn(`Fallback to standard texture for ${config.planetId}:`, err);
-      const tex = new THREE.TextureLoader().load(config.imageSrc, () => {
-        tex.encoding = THREE.sRGBEncoding;
-        buildMesh(tex);
-      });
-    }
-  };
-  img.src = config.imageSrc;
+        const srcData = sctx.getImageData(0, 0, sw, sh);
+        const sPixels = srcData.data;
+        const cx = sw / 2;
+        const cy = sh / 2;
+        const R = (Math.min(sw, sh) / 2) - 4;
+
+        const outData = ctx.createImageData(W, H);
+        const outPixels = outData.data;
+
+        for (let j = 0; j < H; j++) {
+          const v = j / (H - 1);
+          const phi = (v - 0.5) * Math.PI;
+          const cosPhi = Math.cos(phi);
+          const y = Math.sin(phi);
+
+          for (let i = 0; i < W; i++) {
+            const u = i / (W - 1);
+            const theta = (u - 0.25) * 2.0 * Math.PI;
+            const x = cosPhi * Math.sin(theta);
+
+            const imgX = Math.round(cx + x * R);
+            const imgY = Math.round(cy - y * R);
+
+            const clampX = Math.max(0, Math.min(sw - 1, imgX));
+            const clampY = Math.max(0, Math.min(sh - 1, imgY));
+
+            const sIdx = (clampY * sw + clampX) * 4;
+            const oIdx = (j * W + i) * 4;
+
+            outPixels[oIdx] = sPixels[sIdx];
+            outPixels[oIdx + 1] = sPixels[sIdx + 1];
+            outPixels[oIdx + 2] = sPixels[sIdx + 2];
+            outPixels[oIdx + 3] = 255;
+          }
+        }
+
+        ctx.putImageData(outData, 0, 0);
+
+        const texture = new THREE.CanvasTexture(offCanvas);
+        texture.encoding = THREE.sRGBEncoding;
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.ClampToEdgeWrapping;
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
+        texture.generateMipmaps = true;
+
+        buildMesh(texture);
+      } catch (err) {
+        console.warn(`Fallback to standard texture for ${config.planetId}:`, err);
+        const tex = new THREE.TextureLoader().load(config.imageSrc, () => {
+          tex.encoding = THREE.sRGBEncoding;
+          buildMesh(tex);
+        });
+      }
+    };
+    img.src = config.imageSrc;
+  }
+
+  // Texture source dispatch: external GLB model wins when configured,
+  // flat-image reprojection is the automatic fallback.
+  if (config.glbSrc && typeof THREE.GLTFLoader !== 'undefined') {
+    loadGLBModel().catch(err => {
+      console.warn(`GLB failed for ${config.planetId}, falling back to flat texture:`, err);
+      loadFlatTexture();
+    });
+  } else {
+    if (config.glbSrc) console.warn(`THREE.GLTFLoader unavailable, flat texture for ${config.planetId}`);
+    loadFlatTexture();
+  }
 
   // Interaction handlers
   const orbWrap = planetEl.querySelector('.orb-wrap') || canvas;
@@ -315,14 +411,19 @@ export function setupPlanet3DSphere(config) {
   }, false);
 
   canvas.addEventListener('webglcontextrestored', () => {
-    if (currentTexture) buildMesh(currentTexture);
+    if (config.glbSrc && typeof THREE.GLTFLoader !== 'undefined') {
+      loadGLBModel().catch(() => {
+        if (currentTexture) buildMesh(currentTexture);
+        else loadFlatTexture();
+      });
+    } else if (currentTexture) buildMesh(currentTexture);
     requestLoop();
   }, false);
 
   const hoverSpinRate = config.hoverSpinRate !== undefined ? config.hoverSpinRate : 0.0018;
 
   function render() {
-    if (!sphereMesh) {
+    if (!spinNode) {
       isRenderLoopRunning = false;
       return;
     }
@@ -409,8 +510,8 @@ export function setupPlanet3DSphere(config) {
     }
 
     key.position.set(3 + rotY * 1.5, 2 - rotX * 1.5, 4);
-    sphereMesh.rotation.x = rotX;
-    sphereMesh.rotation.y = rotY;
+    spinNode.rotation.x = rotX;
+    spinNode.rotation.y = rotY;
 
     renderer.render(scene, camera);
 
@@ -432,24 +533,31 @@ export function initInteractive3DPlanets() {
     'p-des': setupPlanet3DSphere({
       planetId: 'p-des',
       canvasId: 'p-des-canvas',
-      imageSrc: './Planets/planet-with-hover-5.png',
+      imageSrc: './Planets/planet_design.png',
+      glbSrc: './Planets/3d/planet_3d_design.glb',
       size: 304,
+      noFresnel: true,
       glowColor: 'vec3(1.0, 0.98, 0.95)',
       hoverSpinRate: 0.0012
     }),
     'p-soc': setupPlanet3DSphere({
       planetId: 'p-soc',
       canvasId: 'p-soc-canvas',
-      imageSrc: './Planets/planet-with-hover-6.png',
+      imageSrc: './Planets/planet_socialmedia.png',
+      glbSrc: './Planets/3d/planet_3d_socialmedia.glb',
       size: 228,
       useBasicMaterial: true,
       noFresnel: true,
+      keyIntensity: 0.85,
+      hemiIntensity: 0.55,
+      roughnessOverride: 0.8,
       hoverSpinRate: 0.0014
     }),
     'p-ai': setupPlanet3DSphere({
       planetId: 'p-ai',
       canvasId: 'p-ai-canvas',
-      imageSrc: './Planets/planet-avatars.png',
+      imageSrc: './Planets/planet_ai.png',
+      glbSrc: './Planets/3d/planet_3d_ai.glb',
       size: 172,
       glowColor: 'vec3(0.92, 1.0, 0.96)',
       hoverSpinRate: 0.0016
@@ -457,7 +565,8 @@ export function initInteractive3DPlanets() {
     'p-mus': setupPlanet3DSphere({
       planetId: 'p-mus',
       canvasId: 'p-mus-canvas',
-      imageSrc: './Planets/planet-with-hover-4.png',
+      imageSrc: './Planets/planet_music.png',
+      glbSrc: './Planets/3d/planet_3d_music.glb',
       size: 118,
       glowColor: 'vec3(1.0, 0.82, 0.75)',
       hoverSpinRate: 0.0020
@@ -465,7 +574,7 @@ export function initInteractive3DPlanets() {
     'p-ent': setupPlanet3DSphere({
       planetId: 'p-ent',
       canvasId: 'p-ent-canvas',
-      imageSrc: './Planets/planet-with-hover-1.png',
+      imageSrc: './Planets/planet_entertainment.png',
       size: 84,
       glowColor: 'vec3(1.0, 0.92, 0.82)',
       hoverSpinRate: 0.0022

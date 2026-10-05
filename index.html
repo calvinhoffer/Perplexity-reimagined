@@ -23,12 +23,7 @@
       document.write('<script src="./gsap.min.js"><\/script>');
     }
   </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script>
-    if (typeof THREE === 'undefined') {
-      document.write('<script src="./three.min.js"><\/script>');
-    }
-  </script>
+  <!-- STATIC PNG VARIANT: no three.js / GLTFLoader (see branch static-png-planets) -->
 </head>
 <body>
 <div class="app">
@@ -85,7 +80,7 @@
         <div class="orbit"></div>
         <div class="orb orb-wrap ai">
           <div class="orb-glow"></div>
-          <img src="./Planets/planet-avatars.png" alt="AI tab folder" />
+          <img src="./Planets/planet_ai.png" alt="AI tab folder" />
           <canvas id="p-ai-canvas" class="planet-3d-canvas" width="344" height="344"></canvas>
         </div>
       </div>
@@ -99,7 +94,7 @@
         <div class="orbit"></div>
         <div class="orb orb-wrap entertainment">
           <div class="orb-glow"></div>
-          <img src="./Planets/planet-with-hover-1.png" alt="Entertainment" />
+          <img src="./Planets/planet_entertainment.png" alt="Entertainment" />
           <canvas id="p-ent-canvas" class="planet-3d-canvas" width="168" height="168"></canvas>
         </div>
       </div>
@@ -113,7 +108,7 @@
         <div class="orbit"></div>
         <div class="orb orb-wrap social-media">
           <div class="orb-glow"></div>
-          <img src="./Planets/planet-with-hover-6.png" alt="Social media" />
+          <img src="./Planets/planet_socialmedia.png" alt="Social media" />
           <canvas id="p-soc-canvas" class="planet-3d-canvas" width="456" height="456"></canvas>
         </div>
       </div>
@@ -127,7 +122,7 @@
         <div class="orbit"></div>
         <div class="orb orb-wrap music">
           <div class="orb-glow"></div>
-          <img src="./Planets/planet-with-hover-4.png" alt="Music" />
+          <img src="./Planets/planet_music.png" alt="Music" />
           <canvas id="p-mus-canvas" class="planet-3d-canvas" width="236" height="236"></canvas>
         </div>
       </div>
@@ -141,7 +136,7 @@
         <div class="orbit" id="orbit-des"></div>
         <div class="orb orb-wrap design">
           <div class="orb-glow"></div>
-          <img src="./Planets/planet-with-hover-5.png" alt="Design tab folder" />
+          <img src="./Planets/planet_design.png" alt="Design tab folder" />
           <canvas id="p-des-canvas" class="planet-3d-canvas" width="608" height="608"></canvas>
         </div>
       </div>

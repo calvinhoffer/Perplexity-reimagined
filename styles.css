@@ -527,20 +527,17 @@ h1 {
 #p-mus .tab-dot { width: 32px; height: 32px; }
 #p-ent .tab-dot { width: 28px; height: 28px; }
 
-/* 3D WebGL Canvas */
+/* STATIC PNG VARIANT: crisp PNGs instead of WebGL canvases (canvases removed in main.js) */
 .planet .orb-wrap img {
-  display: none;
-}
-
-.planet-3d-canvas {
+  display: block;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  display: block;
-  pointer-events: none;
-  cursor: none;
-  touch-action: none;
-  will-change: transform;
+  object-fit: cover;
+}
+
+.planet-3d-canvas {
+  display: none;
 }
 
 .tab-dot:hover, .tab-dot:focus-visible {

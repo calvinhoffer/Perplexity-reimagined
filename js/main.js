@@ -1,15 +1,17 @@
 /**
- * Main Application Orchestrator
- * Bootstraps 3D WebGL Spheres, Orbit Tab Interactions, and Custom Cursor
+ * Main Application Orchestrator — STATIC PNG VARIANT (branch: static-png-planets)
+ * No WebGL: planets are crisp PNGs with CSS glow + GSAP grow on hover/click.
+ * Bootstraps Orbit Tab Interactions and Custom Cursor only.
  */
 
-import { initInteractive3DPlanets } from './planet-3d.js';
 import { initPlanetInteractions } from './planet-interactions.js';
 import { initCustomCursor } from './cursor.js';
 
 function bootstrap() {
-  // 1. Initialize 3D WebGL planets
-  const threeInstances = initInteractive3DPlanets();
+  // 1. No 3D in this variant: drop WebGL canvases so interaction physics
+  // falls through to the PNG images (querySelector '.orb canvas' || '.orb img')
+  document.querySelectorAll('.planet-3d-canvas').forEach(c => c.remove());
+  const threeInstances = null;
 
   // 2. Initialize orbit tabs and interaction physics
   const planetManager = initPlanetInteractions(threeInstances);
