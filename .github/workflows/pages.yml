@@ -27,8 +27,9 @@ jobs:
         run: |
           set -e
           mkdir -p site/3d site/static
-          git archive master | tar -x -C site/3d
-          git archive static-png-planets | tar -x -C site/static
+          git fetch --no-tags origin master static-png-planets
+          git archive origin/master | tar -x -C site/3d
+          git archive origin/static-png-planets | tar -x -C site/static
           cat > site/index.html <<'EOF'
           <!DOCTYPE html>
           <html lang="en">
